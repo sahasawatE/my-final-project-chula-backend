@@ -414,4 +414,37 @@ subject.post('/file', (req, res) => {
     }
 })
 
+subject.post('/docCreateFolder',(req,res) => {
+    const teacherId = req.body.Teacher_id;
+    const roomId = req.body.Room_id;
+    const subjectId = req.body.Subject_id;
+    const folderName = req.body.FolderName;
+
+    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${subjectId}/${teacherId}/${roomId}/${folderName}`
+
+    if (!fs.existsSync(dir)) {
+        db.query('INSERT INTO `Subject_doc`(`Subject_id`, `Teacher_id`, `Folder_path`, `Room_id`, `files`) VALUES (?,?,?,?,?)',
+            [subjectId, teacherId, dir, roomId, ''], (err, result) => {
+                if (err) {
+                    console.log(err)
+                }
+                else {
+                    fs.mkdirSync(dir, { recursive: true })
+                    res.send('folder created')
+                }
+            })
+    }
+    else{
+        res.send('This folder name is already used.')
+    }
+})
+
+subject.post('/inFolder',(req,res) => {
+    const teacherId = req.body.Teacher_id;
+    const roomId = req.body.Room_id;
+    const subjectId = req.body.Subject_id;
+    const folders = req.body.folders;
+    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${subjectId}/${teacherId}/${roomId}`
+})
+
 module.exports = subject;

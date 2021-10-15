@@ -148,23 +148,22 @@ teacher.post('/uploadWorkFiles/:subjectId/:teacherId/:roomId/:workName', async (
     })
 })
 
-teacher.post('/allFiles',(req,res) => {
+teacher.post('/allFolders',(req,res) => {
     const roomId = req.body.Room_id;
     const teacherId = req.body.Teacher_id;
     const subjectId = req.body.Subject_id;
-    db.query('SELECT `File_Path` FROM `Subject_doc` WHERE `Room_id` = ? AND `Teacher_id` = ? AND `File_type` = "pdf" AND `Subject_id` = ?',[roomId,teacherId,subjectId],(err,path) => {
+    db.query('SELECT `Folder_path` FROM `Subject_doc` WHERE `Room_id` = ? AND `Teacher_id` = ? AND `Subject_id` = ?',[roomId,teacherId,subjectId],(err,path) => {
         if(err){
             console.log(err)
         }
         else{
             let docs = [];
             for(let i = 0; i < path.length; i++){
-                docs.push(path[i].File_Path)
+                docs.push(path[i].Folder_path)
             }
             res.send(docs)  
         }
     })
-    
 })
 
 teacher.post('/file',(req,res) => {
