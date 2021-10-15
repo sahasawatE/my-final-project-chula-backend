@@ -47,7 +47,7 @@ function uniq(a) {
     });
 }
 
-teacher.post('/uploadFile/:subjectId/:teacherId/:roomId/', async (req, res) => {
+teacher.post('/uploadFile/:subjectId/:teacherId/:roomId/:folder', async (req, res) => {
     if (req.files === null) {
         return res.status(400).json({ msg: 'No file uploaded' });
     }
@@ -55,29 +55,60 @@ teacher.post('/uploadFile/:subjectId/:teacherId/:roomId/', async (req, res) => {
     const subjectId = await req.params.subjectId;
     const teacherId = await req.params.teacherId;
     const roomId = await req.params.roomId;
-    const today = new Date()
+    const folderName = await req.params.folder;
+
+    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${subjectId}/${teacherId}/${roomId}`
 
     const file = req.files.file;
-    db.query('INSERT INTO `Subject_doc`(`Subject_id`, `Teacher_id`, `File_type`, `File_Path`, `Room_id`) VALUES (?,?,?,?,?)', [subjectId, teacherId, "pdf", `/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${file.name}`,roomId],(err,result) => {
+    db.query('INSERT INTO `file_doc`(`File_Path`, `File_type`) VALUES (?,?)', [`${dir}/${folderName}`, "pdf"],(err,result) => {
         if(err){
             console.log(err);
         }
         else{
+            file.mv(`${dir}/${folderName}/${file.name}`, err3 => {
+                if (err) {
+                    return res.status(500).send(err3)
+                }
+
+                res.json({ fileName: file.name, filePath: `${dir}/${folderName}/${file.name}` })
+            })  
             // res.status(200).send('Data inserted.')
-            db.query('INSERT INTO `Notification`( `Noti_Detail`, `Teacher_id`, `Room_id`, `Subject_id`, `Noti_Time`, `Student_id`) VALUES (?,?,?,?,?,?)',["อัพโหลดเอกสาร",teacherId,roomId,subjectId,today,""],(err2,result2) => {
-                if(err2) {
-                    console.log(err2)
-                }
-                else{
-                    file.mv(`/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${file.name}`, err3 => {
-                        if (err) {
-                            return res.status(500).send(err3)
-                        }
+        //     db.query('INSERT INTO `Notification`( `Noti_Detail`, `Teacher_id`, `Room_id`, `Subject_id`, `Noti_Time`, `Student_id`) VALUES (?,?,?,?,?,?)',["อัพโหลดเอกสาร",teacherId,roomId,subjectId,today,""],(err2,result2) => {
+        //         if(err2) {
+        //             console.log(err2)
+        //         }
+        //         else{
+        //             file.mv(`/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${file.name}`, err3 => {
+        //                 if (err) {
+        //                     return res.status(500).send(err3)
+        //                 }
                         
-                        res.json({ fileName: file.name, filePath: `/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${file.name}` })
-                    })  
-                }
-            })
+        //                 res.json({ fileName: file.name, filePath: `/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${file.name}` })
+        //             })  
+        //         }
+        //     })
+        }
+    })
+})
+
+teacher.post('/uploadFileInFolder',(req,res) => {
+    const roomId = req.body.Room_id;
+    const subjectId = req.body.Subject_id;
+    const teacherId = req.body.Teacher_id;
+    const folder = req.body.folder;
+
+    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${subjectId}/${teacherId}/${roomId}/${folder}`
+
+    var files = [];
+
+    db.query('SELECT File_Doc_id FROM file_doc WHERE File_path = ?',[dir],(err,id) => {
+        if(err){
+            console.log(err)
+        }
+        else{
+            id.map(v => files.push(v.File_Doc_id))
+            console.log(files)
+            //continue here
         }
     })
 })
@@ -188,12 +219,31 @@ teacher.delete('/deleteFile',(req,res) => {
     const roomId = req.body.Room_id;
     //delete notification when delete a file
 
-    db.query('DELETE FROM `Subject_doc` WHERE `Subject_id` = ? AND `Teacher_id` = ? AND `File_Path` = ? AND `Room_id` = ?',[subjectId,teacherId,path,roomId], (err,result) => {
+    db.query('DELETE FROM `Subject_doc` WHERE `Subject_id` = ? AND `Teacher_id` = ? AND `Folder_path` = ? AND `Room_id` = ?',[subjectId,teacherId,path,roomId], (err,result) => {
         if(err){
             console.log(err)
         }
         else{
-            fs.unlinkSync(path);
+            // fs.unlinkSync(path);
+            fs.rmdirSync(path, { recursive: true });
+            res.send('File is now deleted.');
+        }
+    })
+})
+
+teacher.delete('/deleteFile', (req, res) => {
+    const path = req.body.File_Path;
+    const teacherId = req.body.Teacher_id;
+    const subjectId = req.body.Subject_id;
+    const roomId = req.body.Room_id;
+    //delete notification when delete a file
+
+    db.query('DELETE FROM `Subject_doc` WHERE `Subject_id` = ? AND `Teacher_id` = ? AND `Folder_path` = ? AND `Room_id` = ?', [subjectId, teacherId, path, roomId], (err, result) => {
+        if (err) {
+            console.log(err)
+        }
+        else {
+            fs.rmdirSync(path, { recursive: true });
             res.send('File is now deleted.');
         }
     })

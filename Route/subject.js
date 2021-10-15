@@ -444,7 +444,21 @@ subject.post('/inFolder',(req,res) => {
     const roomId = req.body.Room_id;
     const subjectId = req.body.Subject_id;
     const folders = req.body.folders;
-    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${subjectId}/${teacherId}/${roomId}`
+    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${subjectId}/${teacherId}/${roomId}`;
+
+    if(fs.existsSync(`${dir}/${folders}`)){
+        db.query('SELECT `files` FROM `Subject_doc` WHERE `Folder_path` = ?', [`${dir}/${folders}`],(err,files) => {
+            if(err){
+                console.log(err)
+            }
+            else{
+                res.send(files)
+            }
+        })
+    }
+    else{
+        res.send('This path does not exits.')
+    }
 })
 
 module.exports = subject;
