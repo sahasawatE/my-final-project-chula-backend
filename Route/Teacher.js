@@ -217,33 +217,36 @@ teacher.delete('/deleteFile',(req,res) => {
     const teacherId = req.body.Teacher_id;
     const subjectId = req.body.Subject_id;
     const roomId = req.body.Room_id;
+
+    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${subjectId}/${teacherId}/${roomId}`;
     //delete notification when delete a file
 
-    db.query('DELETE FROM `Subject_doc` WHERE `Subject_id` = ? AND `Teacher_id` = ? AND `Folder_path` = ? AND `Room_id` = ?',[subjectId,teacherId,path,roomId], (err,result) => {
+    db.query('DELETE FROM `Subject_doc` WHERE `Subject_id` = ? AND `Teacher_id` = ? AND `Folder_path` = ? AND `Room_id` = ?',[subjectId,teacherId,`${dir}/${path}`,roomId], (err,result) => {
         if(err){
             console.log(err)
         }
         else{
-            // fs.unlinkSync(path);
-            fs.rmdirSync(path, { recursive: true });
+            fs.unlinkSync(`${dir}/${path}`);
             res.send('File is now deleted.');
         }
     })
 })
 
-teacher.delete('/deleteFile', (req, res) => {
+teacher.delete('/deleteFolder', (req, res) => {
     const path = req.body.File_Path;
     const teacherId = req.body.Teacher_id;
     const subjectId = req.body.Subject_id;
     const roomId = req.body.Room_id;
-    //delete notification when delete a file
 
-    db.query('DELETE FROM `Subject_doc` WHERE `Subject_id` = ? AND `Teacher_id` = ? AND `Folder_path` = ? AND `Room_id` = ?', [subjectId, teacherId, path, roomId], (err, result) => {
+    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${subjectId}/${teacherId}/${roomId}`;
+    //delete notification when delete a file
+    
+    db.query('DELETE FROM `Subject_doc` WHERE `Subject_id` = ? AND `Teacher_id` = ? AND `Folder_path` = ? AND `Room_id` = ?', [subjectId, teacherId, `${dir}/${path}`, roomId], (err, result) => {
         if (err) {
             console.log(err)
         }
         else {
-            fs.rmdirSync(path, { recursive: true });
+            fs.rmdirSync(`${dir}/${path}`, { recursive: true });
             res.send('File is now deleted.');
         }
     })
