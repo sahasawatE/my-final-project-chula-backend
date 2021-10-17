@@ -423,25 +423,31 @@ subject.post('/docCreateFolder',(req,res) => {
     const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${subjectId}/${teacherId}/${roomId}`
 
     if(folderName === 'noFolder'){
-        db.query('INSERT INTO `Subject_doc`(`Subject_id`, `Teacher_id`, `Folder_path`, `Room_id`, `files`) VALUES (?,?,?,?,?)',
-            [subjectId, teacherId, dir, roomId, ''], (err, result) => {
-                if (err) {
-                    console.log(err)
-                }
-                else {
-                    res.send('folder not create')
-                }
-            })
-    }
-    else{
-        if (!fs.existsSync(dir)) {
+        if (!fs.existsSync(`${dir}/${folderName}`)) {
             db.query('INSERT INTO `Subject_doc`(`Subject_id`, `Teacher_id`, `Folder_path`, `Room_id`, `files`) VALUES (?,?,?,?,?)',
                 [subjectId, teacherId, `${dir}/${folderName}`, roomId, ''], (err, result) => {
                     if (err) {
                         console.log(err)
                     }
                     else {
-                        fs.mkdirSync(dir, { recursive: true })
+                        fs.mkdirSync(`${dir}/${folderName}`, { recursive: true })
+                        res.send('file uploaded')
+                    }
+                })
+        }
+        else {
+            res.send('fuck got bug')
+        }
+    }
+    else{
+        if (!fs.existsSync(`${dir}/${folderName}`)) {
+            db.query('INSERT INTO `Subject_doc`(`Subject_id`, `Teacher_id`, `Folder_path`, `Room_id`, `files`) VALUES (?,?,?,?,?)',
+                [subjectId, teacherId, `${dir}/${folderName}`, roomId, ''], (err, result) => {
+                    if (err) {
+                        console.log(err)
+                    }
+                    else {
+                        fs.mkdirSync(`${dir}/${folderName}`, { recursive: true })
                         res.send('folder created')
                     }
                 })

@@ -14,10 +14,6 @@ const db = mysql.createConnection({
 
 teacher.use(fileUpload());
 
-teacher.get('/',(req,res) => {
-    res.send('hi')
-})
-
 teacher.post('/subject',(req,res) => {
     const teacherId = req.body.Teacher_id;
     const roomId = req.body.Room_id;
@@ -65,68 +61,35 @@ teacher.post('/uploadFile/:subjectId/:teacherId/:roomId/:folder', async (req, re
 
     const file = req.files.file;
     
-    if(folderName === 'noFolder'){
-        db.query('INSERT INTO `file_doc`(`File_Path`, `File_type`) VALUES (?,?)', [`${dir}/${file.name}`, "pdf"], (err, result) => {
-            if (err) {
-                console.log(err);
-            }
-            else {
-                file.mv(`${dir}/${file.name}`, err3 => {
-                    if (err) {
-                        return res.status(500).send(err3)
-                    }
+    db.query('INSERT INTO `file_doc`(`File_Path`, `File_type`) VALUES (?,?)', [`${dir}/${folderName}/${file.name}`, "pdf"], (err, result) => {
+        if (err) {
+            console.log(err);
+        }
+        else {
+            file.mv(`${dir}/${folderName}/${file.name}`, err3 => {
+                if (err) {
+                    return res.status(500).send(err3)
+                }
 
-                    res.json({ fileName: file.name, filePath: `${dir}/${file.name}` })
-                })
-                // res.status(200).send('Data inserted.')
-                //     db.query('INSERT INTO `Notification`( `Noti_Detail`, `Teacher_id`, `Room_id`, `Subject_id`, `Noti_Time`, `Student_id`) VALUES (?,?,?,?,?,?)',["อัพโหลดเอกสาร",teacherId,roomId,subjectId,today,""],(err2,result2) => {
-                //         if(err2) {
-                //             console.log(err2)
-                //         }
-                //         else{
-                //             file.mv(`/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${file.name}`, err3 => {
-                //                 if (err) {
-                //                     return res.status(500).send(err3)
-                //                 }
+                res.json({ fileName: file.name, filePath: `${dir}/${folderName}/${file.name}` })
+            })
+            // res.status(200).send('Data inserted.')
+            //     db.query('INSERT INTO `Notification`( `Noti_Detail`, `Teacher_id`, `Room_id`, `Subject_id`, `Noti_Time`, `Student_id`) VALUES (?,?,?,?,?,?)',["อัพโหลดเอกสาร",teacherId,roomId,subjectId,today,""],(err2,result2) => {
+            //         if(err2) {
+            //             console.log(err2)
+            //         }
+            //         else{
+            //             file.mv(`/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${file.name}`, err3 => {
+            //                 if (err) {
+            //                     return res.status(500).send(err3)
+            //                 }
 
-                //                 res.json({ fileName: file.name, filePath: `/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${file.name}` })
-                //             })  
-                //         }
-                //     })
-            }
-        })
-    }
-    else{
-        db.query('INSERT INTO `file_doc`(`File_Path`, `File_type`) VALUES (?,?)', [`${dir}/${folderName}/${file.name}`, "pdf"], (err, result) => {
-            if (err) {
-                console.log(err);
-            }
-            else {
-                file.mv(`${dir}/${folderName}/${file.name}`, err3 => {
-                    if (err) {
-                        return res.status(500).send(err3)
-                    }
-
-                    res.json({ fileName: file.name, filePath: `${dir}/${folderName}/${file.name}` })
-                })
-                // res.status(200).send('Data inserted.')
-                //     db.query('INSERT INTO `Notification`( `Noti_Detail`, `Teacher_id`, `Room_id`, `Subject_id`, `Noti_Time`, `Student_id`) VALUES (?,?,?,?,?,?)',["อัพโหลดเอกสาร",teacherId,roomId,subjectId,today,""],(err2,result2) => {
-                //         if(err2) {
-                //             console.log(err2)
-                //         }
-                //         else{
-                //             file.mv(`/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${file.name}`, err3 => {
-                //                 if (err) {
-                //                     return res.status(500).send(err3)
-                //                 }
-
-                //                 res.json({ fileName: file.name, filePath: `/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${file.name}` })
-                //             })  
-                //         }
-                //     })
-            }
-        })
-    }
+            //                 res.json({ fileName: file.name, filePath: `/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${file.name}` })
+            //             })  
+            //         }
+            //     })
+        }
+    })
 })
 
 teacher.post('/uploadFileInFolder',(req,res) => {
