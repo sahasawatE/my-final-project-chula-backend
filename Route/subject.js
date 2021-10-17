@@ -420,22 +420,35 @@ subject.post('/docCreateFolder',(req,res) => {
     const subjectId = req.body.Subject_id;
     const folderName = req.body.FolderName;
 
-    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${subjectId}/${teacherId}/${roomId}/${folderName}`
+    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${subjectId}/${teacherId}/${roomId}`
 
-    if (!fs.existsSync(dir)) {
+    if(folderName === 'noFolder'){
         db.query('INSERT INTO `Subject_doc`(`Subject_id`, `Teacher_id`, `Folder_path`, `Room_id`, `files`) VALUES (?,?,?,?,?)',
             [subjectId, teacherId, dir, roomId, ''], (err, result) => {
                 if (err) {
                     console.log(err)
                 }
                 else {
-                    fs.mkdirSync(dir, { recursive: true })
-                    res.send('folder created')
+                    res.send('folder not create')
                 }
             })
     }
     else{
-        res.send('This folder name is already used.')
+        if (!fs.existsSync(dir)) {
+            db.query('INSERT INTO `Subject_doc`(`Subject_id`, `Teacher_id`, `Folder_path`, `Room_id`, `files`) VALUES (?,?,?,?,?)',
+                [subjectId, teacherId, `${dir}/${folderName}`, roomId, ''], (err, result) => {
+                    if (err) {
+                        console.log(err)
+                    }
+                    else {
+                        fs.mkdirSync(dir, { recursive: true })
+                        res.send('folder created')
+                    }
+                })
+        }
+        else {
+            res.send('This folder name is already used.')
+        }
     }
 })
 
@@ -446,13 +459,41 @@ subject.post('/inFolder',(req,res) => {
     const folders = req.body.folders;
     const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${subjectId}/${teacherId}/${roomId}`;
 
+    var fileId = [];
+    var Files = [];
+
     if(fs.existsSync(`${dir}/${folders}`)){
-        db.query('SELECT `files` FROM `Subject_doc` WHERE `Folder_path` = ?', [`${dir}/${folders}`],(err,files) => {
+        db.query('SELECT `files` FROM `Subject_doc` WHERE `Folder_path` = ?', [`${dir}/${folders}`], async (err,files) => {
             if(err){
                 console.log(err)
             }
             else{
-                res.send(files)
+                if (files[0].files.length !== 0){
+                    files[0].files.split('[')[1].split(']')[0].split(',').map(v => {
+                        fileId.push(parseInt(v))
+                    })
+                }
+
+                const queryResults = await Promise.all(
+                    fileId.map(async (key) => {
+                        return new Promise((resolve, reject) =>
+                            db.query('SELECT * FROM `file_doc` WHERE `File_Doc_id` = ?', [key], (err, result) => {
+                                if (err)
+                                    return reject(err)
+                                else {
+                                    return resolve(result)
+                                }
+                            })
+                        )
+                    })
+                )
+
+                queryResults.map(v => {
+                    if (v.length !== 0) {
+                        Files.push(v[0])
+                    }
+                })
+                res.send(Files)
             }
         })
     }
