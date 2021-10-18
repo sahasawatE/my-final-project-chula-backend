@@ -4,6 +4,7 @@ const student = express.Router();
 const fileUpload = require('express-fileupload');
 const pdf2base64 = require('pdf-to-base64');
 const fs = require('fs');
+const { abort } = require('process');
 
 const db = mysql.createConnection({
     user: "root",
@@ -40,19 +41,70 @@ student.post('/detail',(req,res) => {
 student.post('/allFiles',(req,res) => {
     const roomId = req.body.Room_id;
     const subjectId = req.body.Subject_id;
+    const data = [];
 
-    db.query('SELECT `File_Path` FROM `Subject_doc` WHERE `Room_id` = ? AND `Subject_id` = ? AND `File_type` = "pdf"',[roomId,subjectId], (err,path) => {
+    db.query('SELECT `Teacher_id` FROM `Subject` WHERE `Subject_id` = ? AND `Room_id` = ?',[subjectId,roomId], (err, teacherId) => {
         if(err){
             console.log(err)
         }
         else{
-            let docs = [];
-            for (let i = 0; i < path.length; i++) {
-                docs.push(path[i].File_Path)
-            }
-            res.send(docs)
+            db.query('SELECT * FROM `Subject_doc` WHERE `Subject_id` = ? AND `Room_id` = ? AND `Teacher_id` = ?', [subjectId, roomId, teacherId[0].Teacher_id],(err2,id) => {
+                if(err2){
+                    console.log(err2)
+                }
+                else{
+                    if(id.length !== 0){
+                        id.map(v => {
+                            data.push({
+                                path : v.Folder_path ,
+                                fileId : v.files
+                            })
+                        })
+                        res.send(data)
+                    }
+                    else{
+                        res.send('empty')
+                    }
+                }
+            })
         }
     })
+})
+
+student.post('/files',async (req,res) => {
+    const fileId = req.body.fileId;
+    var id = [];
+    var files = [];
+
+    if(fileId.length !== 0){
+        fileId.split('[')[1].split(']')[0].split(',').map(v => {
+            id.push(parseInt(v))
+        })
+        const queryResults = await Promise.all(
+            id.map(async (key) => {
+                return new Promise((resolve, reject) =>
+                    db.query('SELECT * FROM `file_doc` WHERE `File_Doc_id` = ?', [key], (err, result) => {
+                        if (err)
+                            return reject(err)
+                        else {
+                            return resolve(result)
+                        }
+                    })
+                )
+            })
+        )
+
+        queryResults.map(v => {
+            if (v.length !== 0) {
+                files.push(v[0])
+            }
+        })
+
+        res.send(files)
+    }
+    else{
+        res.send('empty')
+    }
 })
 
 student.post('/queryTeacher',(req,res) => {
