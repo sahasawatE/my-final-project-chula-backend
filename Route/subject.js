@@ -423,21 +423,27 @@ subject.post('/docCreateFolder',(req,res) => {
     const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${subjectId}/${teacherId}/${roomId}`
 
     if(folderName === 'noFolder'){
-        if (!fs.existsSync(`${dir}/${folderName}`)) {
-            db.query('INSERT INTO `Subject_doc`(`Subject_id`, `Teacher_id`, `Folder_path`, `Room_id`, `files`) VALUES (?,?,?,?,?)',
-                [subjectId, teacherId, `${dir}/${folderName}`, roomId, ''], (err, result) => {
-                    if (err) {
-                        console.log(err)
-                    }
-                    else {
-                        fs.mkdirSync(`${dir}/${folderName}`, { recursive: true })
-                        res.send('file uploaded')
-                    }
-                })
-        }
-        else {
-            res.send('fuck got bug')
-        }
+        db.query('SELECT `Folder_path` FROM `Subject_doc` WHERE `Folder_path` = ?',[`${dir}/${folderName}`],(err,fn) => {
+            if(err){
+                console.log(err)
+            }
+            else{
+                if(fn.length === 0){
+                    db.query('INSERT INTO `Subject_doc`(`Subject_id`, `Teacher_id`, `Folder_path`, `Room_id`, `files`) VALUES (?,?,?,?,?)',
+                        [subjectId, teacherId, `${dir}/${folderName}`, roomId, ''], (err, result) => {
+                            if (err) {
+                                console.log(err)
+                            }
+                            else {
+                                res.send('file uploaded')
+                            }
+                        })
+                }
+                else{
+                    res.send('ok')
+                }
+            }
+        })
     }
     else{
         if (!fs.existsSync(`${dir}/${folderName}`)) {
@@ -456,6 +462,23 @@ subject.post('/docCreateFolder',(req,res) => {
             res.send('This folder name is already used.')
         }
     }
+})
+
+subject.post('/uploadDocNoti',(req,res) => {
+    const teacherId = req.body.Teacher_id;
+    const roomId = req.body.Room_id;
+    const subjectId = req.body.Subject_id;
+    const today = new Date();
+    const folderName = req.body.FolderName;
+
+    db.query('INSERT INTO `Notification`( `Noti_Detail`, `Teacher_id`, `Room_id`, `Subject_id`, `Noti_Time`, `Student_id`) VALUES (?,?,?,?,?,?)', [folderName.length === 0 ? "อัพโหลดเอกสาร" : `อัพโหลดเอกสารใน ${folderName}`, teacherId, roomId, subjectId, today, ""], (err2, result2) => {
+        if (err2) {
+            console.log(err2)
+        }
+        else {
+            res.send('upload doc done')
+        }
+    })
 })
 
 subject.post('/inFolder',(req,res) => {

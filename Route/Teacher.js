@@ -47,20 +47,24 @@ function uniq(a) {
     });
 }
 
-teacher.post('/uploadFile/:subjectId/:teacherId/:roomId/:folder', async (req, res) => {
+teacher.post('/uploadFile/:subjectId/:teacherId/:roomId/:folder', (req, res) => {
     if (req.files === null) {
         return res.status(400).json({ msg: 'No file uploaded' });
     }
 
-    const subjectId = await req.params.subjectId;
-    const teacherId = await req.params.teacherId;
-    const roomId = await req.params.roomId;
-    const folderName = await req.params.folder;
+    const subjectId = req.params.subjectId;
+    const teacherId = req.params.teacherId;
+    const roomId = req.params.roomId;
+    const folderName = req.params.folder;
 
     const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${subjectId}/${teacherId}/${roomId}`
 
     const file = req.files.file;
     
+    if(!fs.existsSync(`${dir}/${folderName}`)){
+        fs.mkdirSync(`${dir}/${folderName}`, { recursive: true })
+    }
+
     db.query('INSERT INTO `file_doc`(`File_Path`, `File_type`) VALUES (?,?)', [`${dir}/${folderName}/${file.name}`, "pdf"], (err, result) => {
         if (err) {
             console.log(err);
@@ -74,20 +78,6 @@ teacher.post('/uploadFile/:subjectId/:teacherId/:roomId/:folder', async (req, re
                 res.json({ fileName: file.name, filePath: `${dir}/${folderName}/${file.name}` })
             })
             // res.status(200).send('Data inserted.')
-            //     db.query('INSERT INTO `Notification`( `Noti_Detail`, `Teacher_id`, `Room_id`, `Subject_id`, `Noti_Time`, `Student_id`) VALUES (?,?,?,?,?,?)',["อัพโหลดเอกสาร",teacherId,roomId,subjectId,today,""],(err2,result2) => {
-            //         if(err2) {
-            //             console.log(err2)
-            //         }
-            //         else{
-            //             file.mv(`/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${file.name}`, err3 => {
-            //                 if (err) {
-            //                     return res.status(500).send(err3)
-            //                 }
-
-            //                 res.json({ fileName: file.name, filePath: `/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${file.name}` })
-            //             })  
-            //         }
-            //     })
         }
     })
 })
@@ -220,41 +210,99 @@ teacher.post('/file',(req,res) => {
 })
 
 teacher.delete('/deleteFile',(req,res) => {
-    const path = req.body.File_Path;
+    const file = req.body.File;
     const teacherId = req.body.Teacher_id;
     const subjectId = req.body.Subject_id;
     const roomId = req.body.Room_id;
+    var folderName = [];
+    var filesInFolder = [];
 
-    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${subjectId}/${teacherId}/${roomId}`;
+    file.File_Path.split('/').map(v => {folderName.push(v)})
+
+    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${subjectId}/${teacherId}/${roomId}/${folderName[folderName.length - 2]}`;
     //delete notification when delete a file
 
-    db.query('DELETE FROM `Subject_doc` WHERE `Subject_id` = ? AND `Teacher_id` = ? AND `Folder_path` = ? AND `Room_id` = ?',[subjectId,teacherId,`${dir}/${path}`,roomId], (err,result) => {
+    db.query('SELECT * FROM `Subject_doc` WHERE `Folder_path` = ? AND `files` LIKE ?',[dir,`%${file.File_Doc_id}%`],(err,result) => {
         if(err){
             console.log(err)
         }
         else{
-            fs.unlinkSync(`${dir}/${path}`);
-            res.send('File is now deleted.');
+            result[0].files.split('[')[1].split(']')[0].split(',').map(v => {
+                if(parseInt(v) !== file.File_Doc_id){
+                    filesInFolder.push(parseInt(v))
+                }
+            })
+            db.query('DELETE FROM `file_doc` WHERE `File_Doc_id` = ? AND `File_Path` = ?', [file.File_Doc_id, file.File_Path], (err2, result2) => {
+                if (err) {
+                    console.log(err2)
+                }
+                else {
+                    fs.unlinkSync(file.File_Path);
+                    db.query('UPDATE `Subject_doc` SET files = ? WHERE `Folder_path` = ?', [filesInFolder.length === 0 ? '' : JSON.stringify(filesInFolder) ,dir],(err3,result3) => {
+                        if(err2){
+                            console.log.log(err3)
+                        }
+                        else{
+                            res.send('file is deleted')
+                        }
+                    })
+                }
+            })
         }
     })
 })
 
 teacher.delete('/deleteFolder', (req, res) => {
     const path = req.body.File_Path;
-    const teacherId = req.body.Teacher_id;
-    const subjectId = req.body.Subject_id;
-    const roomId = req.body.Room_id;
-
-    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${subjectId}/${teacherId}/${roomId}`;
     //delete notification when delete a file
     
-    db.query('DELETE FROM `Subject_doc` WHERE `Subject_id` = ? AND `Teacher_id` = ? AND `Folder_path` = ? AND `Room_id` = ?', [subjectId, teacherId, `${dir}/${path}`, roomId], (err, result) => {
-        if (err) {
+    db.query('SELECT * FROM `Subject_doc` WHERE Folder_path = ?',[path],(err,result) => {
+        if(err){
             console.log(err)
         }
-        else {
-            fs.rmdirSync(`${dir}/${path}`, { recursive: true });
-            res.send('File is now deleted.');
+        else{
+            if(result[0].files.length === 0){
+                db.query('DELETE FROM `Subject_doc` WHERE `Folder_path` = ?', [path], (err, result) => {
+                    if (err) {
+                        console.log(err)
+                    }
+                    else {
+                        fs.rmdirSync(path, { recursive: true });
+                        res.send('File is now deleted.');
+                    }
+                })
+            }
+            else{
+                db.query('SELECT * FROM `Subject_doc` WHERE `Folder_path` = ?',[path],(err,result) => {
+                    if(err){
+                        console.log(err)
+                    }
+                    else{
+                        db.query('DELETE FROM `Subject_doc` WHERE `Folder_path` = ?',[path] ,async(err2) => {
+                            if(err2){
+                                console.log(err2)
+                            }
+                            else{
+                                await Promise.all(
+                                    result[0].files.split('[')[1].split(']')[0].split(',').map(async (key) => {
+                                        return new Promise((resolve, reject) =>
+                                            db.query('DELETE FROM `file_doc` WHERE `File_Doc_id` = ?', [parseInt(key)], (err, result) => {
+                                                if (err)
+                                                    return reject(err)
+                                                else {
+                                                    return resolve(result)
+                                                }
+                                            })
+                                        )
+                                    })
+                                )
+                                fs.rmdirSync(path, { recursive: true });
+                            }
+                        })
+                        res.send('deleted')
+                    }
+                })
+            }
         }
     })
 })
