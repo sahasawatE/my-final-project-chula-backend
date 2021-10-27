@@ -157,7 +157,6 @@ teacher.post('/uploadWorkFiles/:subjectId/:teacherId/:roomId/:workName', async (
         fs.mkdirSync(dir, { recursive: true })
     }
 
-
     db.query('INSERT INTO `file_work`(`File_path`, `File_type`) VALUES (?,?)', [`${dir}/${file.name}`, type === 'application/pdf' ? 'pdf' : 'image'], (err, result) => {
         if (err) {
             console.log(err);

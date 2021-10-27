@@ -166,6 +166,121 @@ student.post('/seenNotification',(req,res) => {
     })
 })
 
+student.post('/uploadWorkFile/:subjectId/:studentId/:roomId/:workName',(req,res) => {
+    if (req.files === null) {
+        return res.status(400).json({ msg: 'No file uploaded' });
+    }
+
+    const subjectId = req.params.subjectId;
+    const studentId = req.params.studentId;
+    const roomId = req.params.roomId;
+    const workName = req.params.workName;
+
+    const file = req.files.file;
+    const type = file.mimetype;
+
+    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/studentSubmitWork/${subjectId}/${roomId}/${studentId}/${workName}`;
+
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true })
+    }
+
+    db.query('INSERT INTO `student_submit_work_file`(`File_Path`, `File_type`) VALUES (?,?)', [`${dir}/${file.name}`, type === 'application/pdf' ? 'pdf' : 'image'], (err) => {
+        if (err) {
+            console.log(err);
+        }
+        else {
+            file.mv(`${dir}/${file.name}`, err3 => {
+                if (err3) {
+                    return res.status(500).send(err3)
+                }
+                else {
+                    res.json({ fileName: file.name, filePath: dir })
+                }
+            })
+        }
+    })
+})
+
+student.post('/updateWorkSubmit',(req,res) => {
+    const subjectId = req.body.Subject_id;
+    const studentId = req.body.Student_id;
+    const roomId = req.body.Room_id;
+    const workName = req.body.workName;
+    const teacherId = req.body.Teacher_id;
+    const score = req.body.score;
+    var workFileId = [];
+
+    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/studentSubmitWork/${subjectId}/${roomId}/${studentId}/${workName}`;
+
+    db.query('SELECT * FROM `Student_Work_Submit` WHERE `Subject_id` = ? AND `Student_id` = ? AND `Room_id` = ? AND `Work_Name` = ?',[subjectId,studentId,roomId,workName], (err,result) => {
+        if(err){
+            console.log(err)
+        }
+        else{
+            db.query('SELECT * FROM `student_submit_work_file` WHERE `File_Path` LIKE ?',[`${dir}%`],(err2,result2) => {
+                if(err2){
+                    console.log(err2)
+                }
+                else{
+                    result2.map(v => {
+                        workFileId.push(parseInt(v.Submit_File_id))
+                    })
+
+                    if (result.length === 0) {
+                        db.query('INSERT INTO `Student_Work_Submit`(`Student_id`, `Teacher_id`, `Room_id`, `Subject_id`, `Work_Name`, `Folder_path`, `Score`, `files`, `isSubmit`) VALUES (?,?,?,?,?,?,?,?,?)',
+                            [studentId, teacherId, roomId, subjectId, workName, dir, score, JSON.stringify(workFileId), 'false'],(err3) => {
+                                if(err3){
+                                    console.log(err3)
+                                }
+                                else{
+                                    res.send('updated')
+                                }
+                            })
+                    }
+                    else{
+                        db.query('UPDATE `Student_Work_Submit` SET `files`= ? WHERE `Student_id` = ? AND `Teacher_id` = ? AND `Room_id` = ? AND `Subject_id` = ? AND `Work_Name` = ? AND `Folder_path` = ?',
+                            [JSON.stringify(workFileId), studentId, teacherId, roomId, subjectId, workName, dir], (err3) => {
+                                if (err3) {
+                                    console.log(err3)
+                                }
+                                else {
+                                    res.send('updated')
+                                }
+                            })
+                    }
+                }
+            })
+        }
+    })
+})
+
+student.post('/prepareWork',(req,res) => {
+    const subjectId = req.body.Subject_id;
+    const studentId = req.body.Student_id;
+    const roomId = req.body.Room_id;
+    const workName = req.body.workName;
+    const teacherId = req.body.Teacher_id;
+    const score = req.body.score;
+    var prepareWorkFileId = [];
+
+    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/studentSubmitWork/${subjectId}/${roomId}/${studentId}/${workName}`;
+
+    db.query('SELECT * FROM `Student_Work_Submit` WHERE `Subject_id` = ? AND `Student_id` = ? AND `Room_id` = ? AND `Work_Name` = ? AND `Folder_path` = ? AND `Teacher_id` = ? AND `Score` = ?', [subjectId, studentId, roomId, workName,dir,teacherId,score],(err,result) => {
+        if(err){
+            console.log(err)
+        }
+        else{
+            if(result.length !== 0){
+                result[0].files.split('[')[1].split(']')[0].split(',').map(v => {
+                    prepareWorkFileId.push(parseInt(v))
+                })
+                console.log(prepareWorkFileId)
+            }
+        }
+    })
+})
+
 function uniq(a) {
     var seen = {};
     return a.filter(function (item) {
