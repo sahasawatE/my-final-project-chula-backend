@@ -240,7 +240,7 @@ student.post('/updateWorkSubmit',(req,res) => {
                     }
                     else{
                         db.query('UPDATE `Student_Work_Submit` SET `files`= ? WHERE `Student_id` = ? AND `Teacher_id` = ? AND `Room_id` = ? AND `Subject_id` = ? AND `Work_Name` = ? AND `Folder_path` = ?',
-                            [JSON.stringify(workFileId), studentId, teacherId, roomId, subjectId, workName, dir], (err3) => {
+                            [workFileId.length === 0 ? '' : JSON.stringify(workFileId), studentId, teacherId, roomId, subjectId, workName, dir], (err3) => {
                                 if (err3) {
                                     console.log(err3)
                                 }
@@ -263,20 +263,54 @@ student.post('/prepareWork',(req,res) => {
     const teacherId = req.body.Teacher_id;
     const score = req.body.score;
     var prepareWorkFileId = [];
+    var files = [];
 
     const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/studentSubmitWork/${subjectId}/${roomId}/${studentId}/${workName}`;
 
-    db.query('SELECT * FROM `Student_Work_Submit` WHERE `Subject_id` = ? AND `Student_id` = ? AND `Room_id` = ? AND `Work_Name` = ? AND `Folder_path` = ? AND `Teacher_id` = ? AND `Score` = ?', [subjectId, studentId, roomId, workName,dir,teacherId,score],(err,result) => {
+    db.query('SELECT * FROM `Student_Work_Submit` WHERE `Subject_id` = ? AND `Student_id` = ? AND `Room_id` = ? AND `Work_Name` = ? AND `Folder_path` = ? AND `Teacher_id` = ? AND `Score` = ?', [subjectId, studentId, roomId, workName,dir,teacherId,score],async (err,result) => {
         if(err){
             console.log(err)
         }
         else{
             if(result.length !== 0){
-                result[0].files.split('[')[1].split(']')[0].split(',').map(v => {
+                result[0].files.length !== 0 && result[0].files.split('[')[1].split(']')[0].split(',').map(v => {
                     prepareWorkFileId.push(parseInt(v))
                 })
-                console.log(prepareWorkFileId)
+                const queryResults = await Promise.all(
+                    prepareWorkFileId.map(async (v) => {
+
+                        return new Promise((resolve, reject) =>
+                            db.query('SELECT * FROM `student_submit_work_file` WHERE `Submit_File_id` = ?', [v], (err, result) => {
+                                if (err)
+                                    return reject(err)
+                                else {
+                                    return resolve(result)
+                                }
+                            })
+                        )
+                    })
+                )
+                queryResults.map(v => {
+                    if (v.length !== 0) {
+                        v.map(n => files.push(n))
+                    }
+                })
+                res.send(files)
             }
+        }
+    })
+})
+
+student.delete('/deletePrepareWorkFile',(req,res) => {
+    const file = req.body.file
+    
+    db.query('DELETE FROM `student_submit_work_file` WHERE `Submit_File_id` = ?',[file.Submit_File_id],(err) => {
+        if(err){
+            console.log(err)
+        }
+        else{
+            fs.unlinkSync(file.File_Path);
+            res.send('deleted')
         }
     })
 })
