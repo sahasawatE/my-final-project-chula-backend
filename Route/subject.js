@@ -464,6 +464,56 @@ subject.post('/docCreateFolder',(req,res) => {
     }
 })
 
+subject.post('/clipCreateFolder', (req, res) => {
+    const teacherId = req.body.Teacher_id;
+    const roomId = req.body.Room_id;
+    const subjectId = req.body.Subject_id;
+    const folderName = req.body.FolderName;
+
+    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/TeacherUploadClip/${subjectId}/${teacherId}/${roomId}`
+
+    if (folderName === 'noFolder') {
+        db.query('SELECT `Folder_path` FROM `Subject_clip` WHERE `Folder_path` = ?', [`${dir}/${folderName}`], (err, fn) => {
+            if (err) {
+                console.log(err)
+            }
+            else {
+                if (fn.length === 0) {
+                    db.query('INSERT INTO `Subject_clip`(`Subject_id`, `Teacher_id`, `Folder_path`, `Room_id`, `files`) VALUES (?,?,?,?,?)',
+                        [subjectId, teacherId, `${dir}/${folderName}`, roomId, ''], (err, result) => {
+                            if (err) {
+                                console.log(err)
+                            }
+                            else {
+                                res.send('file uploaded')
+                            }
+                        })
+                }
+                else {
+                    res.send('ok')
+                }
+            }
+        })
+    }
+    else {
+        if (!fs.existsSync(`${dir}/${folderName}`)) {
+            db.query('INSERT INTO `Subject_clip`(`Subject_id`, `Teacher_id`, `Folder_path`, `Room_id`, `files`) VALUES (?,?,?,?,?)',
+                [subjectId, teacherId, `${dir}/${folderName}`, roomId, ''], (err, result) => {
+                    if (err) {
+                        console.log(err)
+                    }
+                    else {
+                        fs.mkdirSync(`${dir}/${folderName}`, { recursive: true })
+                        res.send('folder created')
+                    }
+                })
+        }
+        else {
+            res.send('This folder name is already used.')
+        }
+    }
+})
+
 subject.post('/uploadDocNoti',(req,res) => {
     const teacherId = req.body.Teacher_id;
     const roomId = req.body.Room_id;
@@ -529,6 +579,58 @@ subject.post('/inFolder',(req,res) => {
         })
     }
     else{
+        res.send('This path does not exits.')
+    }
+})
+
+subject.post('/inClipFolder', (req, res) => {
+    const teacherId = req.body.Teacher_id;
+    const roomId = req.body.Room_id;
+    const subjectId = req.body.Subject_id;
+    const folders = req.body.folders;
+    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/TeacherUploadClip/${subjectId}/${teacherId}/${roomId}`;
+
+    var fileId = [];
+    var Files = [];
+
+    if (fs.existsSync(`${dir}/${folders}`)) {
+        db.query('SELECT `files` FROM `Subject_clip` WHERE `Folder_path` = ?', [`${dir}/${folders}`], async (err, files) => {
+            if (err) {
+                console.log(err)
+            }
+            else {
+                if (files.length !== 0) {
+                    if (files[0].files.length !== 0) {
+                        files[0].files.split('[')[1].split(']')[0].split(',').map(v => {
+                            fileId.push(parseInt(v))
+                        })
+                    }
+
+                    const queryResults = await Promise.all(
+                        fileId.map(async (key) => {
+                            return new Promise((resolve, reject) =>
+                                db.query('SELECT * FROM `file_clip` WHERE `File_Clip_id` = ?', [key], (err, result) => {
+                                    if (err)
+                                        return reject(err)
+                                    else {
+                                        return resolve(result)
+                                    }
+                                })
+                            )
+                        })
+                    )
+
+                    queryResults.map(v => {
+                        if (v.length !== 0) {
+                            Files.push(v[0])
+                        }
+                    })
+                    res.send(Files)
+                }
+            }
+        })
+    }
+    else {
         res.send('This path does not exits.')
     }
 })
@@ -649,6 +751,25 @@ subject.delete('/CancelFolder',(req,res) => {
             }
         }
     })
+})
+
+subject.post('/checkStatusWork',(req,res) => {
+    const selectWork = req.body.selectWork;
+    const studentId = req.body.Student_id
+    db.query('SELECT `isSubmit` FROM `Student_Work_Submit` WHERE `Student_id` = ? AND `Teacher_id` = ? AND `Room_id` = ? AND `Subject_id` = ? AND `Work_Name` = ? AND `Score` = ?',
+        [studentId, selectWork.Teacher_id, selectWork.Room_id, selectWork.Subject_id, selectWork.Work_Name, selectWork.Score],(err,result) => {
+            if(err){
+                console.log(err)
+            }
+            else{
+                if(result.length === 0){
+                    res.send('false')
+                }
+                else{
+                    res.send(result[0].isSubmit)
+                }
+            }
+        })
 })
 
 module.exports = subject;

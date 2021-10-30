@@ -110,6 +110,70 @@ teacher.post('/uploadFileInFolder',(req,res) => {
     })
 })
 
+teacher.post('/uploadClip/:subjectId/:teacherId/:roomId/:folder/:ClipName', (req, res) => {
+    if (req.files === null) {
+        return res.status(400).json({ msg: 'No file uploaded' });
+    }
+
+    const subjectId = req.params.subjectId;
+    const teacherId = req.params.teacherId;
+    const roomId = req.params.roomId;
+    const folderName = req.params.folder;
+    const clipName = req.params.ClipName;
+
+    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/TeacherUploadClip/${subjectId}/${teacherId}/${roomId}`
+
+    const file = req.files.clip;
+
+    if (!fs.existsSync(`${dir}/${folderName}`)) {
+        fs.mkdirSync(`${dir}/${folderName}`, { recursive: true })
+    }
+
+    db.query('INSERT INTO `file_clip`(`File_Path`,`Clip_Name`) VALUES (?,?)', [`${dir}/${folderName}/${file.name}`,clipName], (err) => {
+        if (err) {
+            console.log(err);
+        }
+        else {
+            file.mv(`${dir}/${folderName}/${file.name}`, err3 => {
+                if (err) {
+                    return res.status(500).send(err3)
+                }
+
+                res.json({ fileName: file.name, filePath: `${dir}/${folderName}/${file.name}` })
+            })
+            // res.status(200).send('Data inserted.')
+        }
+    })
+})
+
+teacher.post('/uploadClipInFolder', (req, res) => {
+    const roomId = req.body.Room_id;
+    const subjectId = req.body.Subject_id;
+    const teacherId = req.body.Teacher_id;
+    const folder = req.body.folder;
+
+    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/TeacherUploadClip/${subjectId}/${teacherId}/${roomId}/${folder}`
+
+    var files = [];
+
+    db.query('SELECT `File_Clip_id` FROM `file_clip` WHERE `File_Path` LIKE ?', [`${dir}%`], (err, id) => {
+        if (err) {
+            console.log(err)
+        }
+        else {
+            id.map(v => files.push(v.File_Clip_id))
+            db.query('UPDATE `Subject_clip` SET `files` = ? WHERE `Folder_path` = ?', [JSON.stringify(files), dir], err2 => {
+                if (err2) {
+                    console.log(err2)
+                }
+                else {
+                    res.send('uploaded')
+                }
+            })
+        }
+    })
+})
+
 teacher.post('/addWork',(req,res) => {
     const subjectId = req.body.Subject_id;
     const teacherId = req.body.Teacher_id;
@@ -514,6 +578,32 @@ teacher.post('/addWorkWithFiles',(req,res) => {
                     })
                 }
             })
+        }
+    })
+})
+
+teacher.post('/checkWork',(req,res) => {
+    const subjectId = req.body.Subject_id;
+    const roomId = req.body.Room_id;
+    const teacherId = req.body.Teacher_id;
+    const workName = req.body.Work_Name;
+
+    var submittedStudent = [];
+    db.query('SELECT * FROM `Student_Work_Submit` WHERE `Teacher_id` = ? AND `Room_id` = ? AND `Subject_id` = ? AND `Work_Name` = ?',
+    [teacherId,roomId,subjectId,workName],(err,result) => {
+        if(err){
+            console.log(err)
+        }
+        else{
+            if(result.length !== 0){
+                result.map(v => {
+                    submittedStudent.push(v)
+                })
+                res.send(submittedStudent)
+            }
+            else{
+                res.send(submittedStudent)
+            }
         }
     })
 })

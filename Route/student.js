@@ -315,6 +315,44 @@ student.delete('/deletePrepareWorkFile',(req,res) => {
     })
 })
 
+student.post('/submitwork',(req,res) => {
+    const subjectId = req.body.Subject_id;
+    const studentId = req.body.Student_id;
+    const roomId = req.body.Room_id;
+    const workName = req.body.workName;
+    const teacherId = req.body.Teacher_id;
+    const score = req.body.score;
+
+    db.query('UPDATE `Student_Work_Submit` SET `isSubmit`= ? WHERE `Student_id` = ? AND `Teacher_id` = ? AND `Room_id` = ? AND `Subject_id` = ? AND `Work_Name` = ? AND `Score` = ?',
+    ['true',studentId,teacherId,roomId,subjectId,workName,score],(err) => {
+        if(err){
+            console.log(err)
+        }
+        else{
+            res.send('work send')
+        }
+    })
+})
+
+student.post('/editWork', (req,res) => {
+    const subjectId = req.body.Subject_id;
+    const studentId = req.body.Student_id;
+    const roomId = req.body.Room_id;
+    const workName = req.body.workName;
+    const teacherId = req.body.Teacher_id;
+    const score = req.body.score;
+
+    db.query('UPDATE `Student_Work_Submit` SET `isSubmit`= ? WHERE `Student_id` = ? AND `Teacher_id` = ? AND `Room_id` = ? AND `Subject_id` = ? AND `Work_Name` = ? AND `Score` = ?',
+        ['false', studentId, teacherId, roomId, subjectId, workName, score], (err) => {
+            if (err) {
+                console.log(err)
+            }
+            else {
+                res.send('work send')
+            }
+        })
+})
+
 function uniq(a) {
     var seen = {};
     return a.filter(function (item) {
