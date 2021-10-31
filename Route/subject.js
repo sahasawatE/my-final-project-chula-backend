@@ -2,6 +2,7 @@ const mysql = require('mysql');
 const express = require('express');
 const { json } = require('body-parser');
 const pdf2base64 = require('pdf-to-base64');
+const imageToBase64 = require('image-to-base64');
 const fs = require('fs');
 const subject = express.Router();
 
@@ -409,8 +410,17 @@ subject.post('/file', (req, res) => {
             )
     }
     else if(type === 'image'){
-        var imageAsBase64 = fs.readFileSync(path, 'base64');
-        res.send(imageAsBase64)
+        imageToBase64(path) // Path to the image
+            .then(
+                (response) => {
+                    res.send(response); // "cGF0aC90by9maWxlLmpwZw=="
+                }
+            )
+            .catch(
+                (error) => {
+                    console.log(error); // Logs an error if there was one
+                }
+            )
     }
 })
 

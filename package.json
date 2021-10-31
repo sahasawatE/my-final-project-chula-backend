@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "@hapi/joi": "^17.1.1",
+    "@mux/mux-node": "^3.3.1",
     "bcrypt": "^5.0.1",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
@@ -18,8 +19,10 @@
     "express": "^4.17.1",
     "express-fileupload": "^1.2.1",
     "express-session": "^1.17.2",
+    "image-to-base64": "^2.2.0",
     "jsonwebtoken": "^8.5.1",
     "mysql": "^2.18.1",
+    "node-video-lib": "^2.2.1",
     "nodemon": "^2.0.12",
     "pdf-to-base64": "^1.0.3"
   }

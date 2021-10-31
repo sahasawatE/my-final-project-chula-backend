@@ -3,6 +3,7 @@ const teacher = express.Router()
 const mysql = require('mysql');
 const fileUpload = require('express-fileupload');
 const pdf2base64 = require('pdf-to-base64');
+const imageToBase64 = require('image-to-base64');
 const fs = require('fs');
 // const { EBADF } = require('constants');
 
@@ -257,6 +258,24 @@ teacher.post('/allFolders',(req,res) => {
     })
 })
 
+teacher.post('/allClipFolders', (req, res) => {
+    const roomId = req.body.Room_id;
+    const teacherId = req.body.Teacher_id;
+    const subjectId = req.body.Subject_id;
+    db.query('SELECT `Folder_path` FROM `Subject_clip` WHERE `Room_id` = ? AND `Teacher_id` = ? AND `Subject_id` = ?', [roomId, teacherId, subjectId], (err, path) => {
+        if (err) {
+            console.log(err)
+        }
+        else {
+            let docs = [];
+            for (let i = 0; i < path.length; i++) {
+                docs.push(path[i].Folder_path)
+            }
+            res.send(docs)
+        }
+    })
+})
+
 teacher.post('/file',(req,res) => {
     const file = req.body.filePath;
     pdf2base64(file)
@@ -268,6 +287,56 @@ teacher.post('/file',(req,res) => {
         .catch(
             (error) => {
                 console.log(error); //Exepection error....
+            }
+        )
+})
+
+teacher.get('/video/:path/:name/:subjectId/:teacherId/:roomId',(req,res) => {
+    const range = req.headers.range;
+    const path = req.params.path;
+    const name = req.params.name;
+    const subjectId = req.params.subjectId;
+    const teacherId = req.params.teacherId;
+    const roomId = req.params.roomId;
+
+    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/TeacherUploadClip/${subjectId}/${teacherId}/${roomId}/${path}/${name}`;
+    if (!range) {
+        res.status(400).send("Requires Range header");
+    }
+    const videoSize = fs.statSync(dir).size;
+    const CHUNK_SIZE = 10 ** 6; // 1MB
+    const start = Number(range.replace(/\D/g, ""));
+    const end = Math.min(start + CHUNK_SIZE, videoSize - 1);
+    // Create headers
+    const contentLength = end - start + 1;
+    const headers = {
+        "Content-Range": `bytes ${start}-${end}/${videoSize}`,
+        "Accept-Ranges": "bytes",
+        "Content-Length": contentLength,
+        "Content-Type": "video/mp4",
+    };
+
+    // HTTP Status 206 for Partial Content
+    res.writeHead(206, headers);
+
+    // create video read stream for this particular chunk
+    const videoStream = fs.createReadStream(dir, { start, end });
+
+    // Stream the video chunk to the client
+    videoStream.pipe(res);
+})
+
+teacher.post('/image',(req,res) => {
+    const img = req.body.filePath;
+    imageToBase64(img) // Path to the image
+        .then(
+            (response) => {
+                console.log(response); // "cGF0aC90by9maWxlLmpwZw=="
+            }
+        )
+        .catch(
+            (error) => {
+                console.log(error); // Logs an error if there was one
             }
         )
 })
