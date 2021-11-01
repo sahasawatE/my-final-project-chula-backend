@@ -651,8 +651,7 @@ subject.delete('/CancelFiles',(req,res) => {
     const dir = `${path}/${fileName}`;
     var fileId = [];
     var deleteFileId;
-    //this is funcking usrless
-    //create new query pls
+
     db.query('SELECT * FROM `file_doc` WHERE `File_Path` LIKE ?', [`${path}%`], (err2, result2) => {
         if (err2) {
             console.log(err2)
@@ -755,7 +754,124 @@ subject.delete('/CancelFolder',(req,res) => {
                     }
                     else {
                         fs.rmdirSync(path, { recursive: true });
+                        res.send('folder is deleted')
+                    }
+                })
+            }
+        }
+    })
+})
+
+subject.delete('/CancelClipFolder', (req, res) => {
+    const path = req.body.path;
+    var fileId = [];
+    db.query('SELECT * FROM `Subject_clip` WHERE `Folder_path` = ?', [path], (err, result) => {
+        if (err) {
+            console.log(err)
+        }
+        else {
+            if (result[0].files.length !== 0) {
+                result[0].files.split('[')[1].split(']')[0].split(',').map(v => fileId.push(parseInt(v)))
+                db.query('DELETE FROM `Subject_clip` WHERE `Folder_path` = ?', [path], async (err) => {
+                    if (err) {
+                        console.log(err)
+                    }
+                    else {
+                        await Promise.all(
+                            fileId.map(async id => {
+                                return new Promise((resolve, reject) =>
+                                    db.query('DELETE FROM `file_clip` WHERE `File_Clip_id` = ?', [id], (err, result) => {
+                                        if (err)
+                                            return reject(err)
+                                        else {
+                                            return resolve(result)
+                                        }
+                                    })
+                                )
+                            })
+                        )
+                        fs.rmdirSync(path, { recursive: true });
                         res.send('file is deleted')
+                    }
+                })
+            }
+            else {
+                db.query('DELETE FROM `Subject_clip` WHERE `Folder_path` = ?', [path], (err) => {
+                    if (err) {
+                        console.log(err)
+                    }
+                    else {
+                        fs.rmdirSync(path, { recursive: true });
+                        res.send('folder is deleted')
+                    }
+                })
+            }
+        }
+    })
+})
+
+subject.delete('/CancelClipFiles', (req, res) => {
+    const path = req.body.path;
+    const fileName = req.body.name;
+    const dir = `${path}/${fileName}`;
+    var fileId = [];
+    var deleteFileId;
+
+    db.query('SELECT * FROM `file_clip` WHERE `File_Path` LIKE ?', [`${path}%`], (err2, result2) => {
+        if (err2) {
+            console.log(err2)
+        }
+        else {
+            result2.map(v => {
+                if (v.File_Path !== dir) {
+                    fileId.push(v.File_Clip_id)
+                }
+                else {
+                    deleteFileId = v.File_Clip_id
+                }
+            })
+            db.query('DELETE FROM `file_clip` WHERE `File_Path` = ? AND `File_Clip_id` = ?', [dir, parseInt(deleteFileId)], (err4) => {
+                if (err4) {
+                    console.log(err4)
+                }
+                else {
+                    fs.unlinkSync(dir);
+                    res.send('file is deleted')
+                }
+            })
+        }
+    })
+})
+
+subject.post('/updateCLipList', (req, res) => {
+    const path = req.body.path;
+    var fileId = [];
+
+    db.query('SELECT * FROM `file_clip` WHERE `File_Path` LIKE ?', [`${path}%`], (err, result) => {
+        if (err) {
+            console.log(err);
+        }
+        else {
+            result.map(v => {
+                fileId.push(v.File_Clip_id)
+            })
+            if (fileId.length === 0) {
+                db.query('UPDATE `Subject_clip` SET `files` = ? WHERE `Folder_path` = ?', ['', path], (err3) => {
+                    if (err3) {
+                        console.log(err3)
+                    }
+                    else {
+                        res.send('updated')
+                    }
+                })
+            }
+            else {
+                db.query('UPDATE `Subject_clip` SET `files` = ? WHERE `Folder_path` = ?', [JSON.stringify(fileId), path], (err3) => {
+                    if (err3) {
+                        console.log(err3)
+                    }
+                    else {
+                        res.send('updated')
                     }
                 })
             }
