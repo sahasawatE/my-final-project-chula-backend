@@ -439,6 +439,111 @@ teacher.delete('/deleteFolder', (req, res) => {
     })
 })
 
+teacher.delete('/deleteClipFolder', (req, res) => {
+    const path = req.body.path;
+    //delete notification when delete a file
+
+    db.query('SELECT * FROM `Subject_clip` WHERE `Folder_path` = ?', [path], (err, result) => {
+        if (err) {
+            console.log(err)
+        }
+        else {
+            if (result[0].files.length === 0) {
+                db.query('DELETE FROM `Subject_clip` WHERE `Folder_path` = ?', [path], (err, result) => {
+                    if (err) {
+                        console.log(err)
+                    }
+                    else {
+                        fs.rmdirSync(path, { recursive: true });
+                        res.send('File is now deleted.');
+                    }
+                })
+            }
+            else {
+                db.query('SELECT * FROM `Subject_clip` WHERE `Folder_path` = ?', [path], (err, result) => {
+                    if (err) {
+                        console.log(err)
+                    }
+                    else {
+                        db.query('DELETE FROM `Subject_clip` WHERE `Folder_path` = ?', [path], async (err2) => {
+                            if (err2) {
+                                console.log(err2)
+                            }
+                            else {
+                                await Promise.all(
+                                    result[0].files.split('[')[1].split(']')[0].split(',').map(async (key) => {
+                                        return new Promise((resolve, reject) =>
+                                            db.query('DELETE FROM `file_clip` WHERE `File_Clip_id` = ?', [parseInt(key)], (err, result) => {
+                                                if (err)
+                                                    return reject(err)
+                                                else {
+                                                    return resolve(result)
+                                                }
+                                            })
+                                        )
+                                    })
+                                )
+                                fs.rmdirSync(path, { recursive: true });
+                            }
+                        })
+                        res.send('deleted')
+                    }
+                })
+            }
+        }
+    })
+})
+
+teacher.delete('/deleteClip',(req,res) => {
+    const clipName = req.body.name;
+    const clipPath = req.body.path;
+    var p = [];
+    var dir = '';
+    var files = [];
+
+    db.query('SELECT * FROM `file_clip` WHERE `File_Path` = ? AND `Clip_Name` = ?',[clipPath,clipName],(err,id) => {
+        if(err){
+            console.log(err)
+        }
+        else{
+            clipPath.split('/').map(v => p.push(v))
+            p.filter(e => e != p[p.length - 1]).map((v,i) => {
+                if(i > 0){
+                    dir = dir + '/' + v
+                }
+            })
+            db.query('SELECT * FROM `Subject_clip` WHERE `Folder_path` = ?',[dir],(err2,f) => {
+                if(err2){
+                    console.log(err2)
+                }
+                else{
+                    f[0].files.split('[')[1].split(']')[0].split(',').map(v => {
+                        if (v !== String(id[0].File_Clip_id)){
+                            files.push(parseInt(v))
+                        }
+                    })
+                    db.query('DELETE FROM `file_clip` WHERE `File_Clip_id` = ?', [id[0].File_Clip_id],(err3) => {
+                        if(err3){
+                            console.log(err3)
+                        }
+                        else{
+                            db.query('UPDATE `Subject_clip` SET `files`= ? WHERE `Folder_path` = ?',[files.length === 0 ? '' : JSON.stringify(files),dir],(err4) => {
+                                if(err4){
+                                    console.log(err4)
+                                }
+                                else{
+                                    fs.unlinkSync(clipPath);
+                                    res.send('deleted')
+                                }
+                            })
+                        }
+                    })
+                }
+            })
+        }
+    })
+})
+
 teacher.post('/uploadDoc', (req, res) => {
     const subjectId = req.body.Subject_id;
     const teacherId = req.body.Teacher_id;

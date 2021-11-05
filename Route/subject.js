@@ -593,6 +593,54 @@ subject.post('/inFolder',(req,res) => {
     }
 })
 
+subject.post('/enterClipFolder', (req, res) => {
+    const path = req.body.path
+
+    var fileId = [];
+    var Files = [];
+
+    if (fs.existsSync(path)) {
+        db.query('SELECT `files` FROM `Subject_clip` WHERE `Folder_path` = ?', [path], async (err, files) => {
+            if (err) {
+                console.log(err)
+            }
+            else {
+                if (files.length !== 0) {
+                    if (files[0].files.length !== 0) {
+                        files[0].files.split('[')[1].split(']')[0].split(',').map(v => {
+                            fileId.push(parseInt(v))
+                        })
+                    }
+
+                    const queryResults = await Promise.all(
+                        fileId.map(async (key) => {
+                            return new Promise((resolve, reject) =>
+                                db.query('SELECT * FROM `file_clip` WHERE `File_Clip_id` = ?', [key], (err, result) => {
+                                    if (err)
+                                        return reject(err)
+                                    else {
+                                        return resolve(result)
+                                    }
+                                })
+                            )
+                        })
+                    )
+
+                    queryResults.map(v => {
+                        if (v.length !== 0) {
+                            Files.push(v[0])
+                        }
+                    })
+                    res.send(Files)
+                }
+            }
+        })
+    }
+    else {
+        res.send('This path does not exits.')
+    }
+})
+
 subject.post('/inClipFolder', (req, res) => {
     const teacherId = req.body.Teacher_id;
     const roomId = req.body.Room_id;
