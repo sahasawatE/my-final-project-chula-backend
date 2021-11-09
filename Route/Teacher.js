@@ -331,7 +331,7 @@ teacher.post('/image',(req,res) => {
     imageToBase64(img) // Path to the image
         .then(
             (response) => {
-                console.log(response); // "cGF0aC90by9maWxlLmpwZw=="
+                res.send(response); // "cGF0aC90by9maWxlLmpwZw=="
             }
         )
         .catch(

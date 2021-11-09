@@ -1,11 +1,12 @@
 const mysql = require('mysql');
 const express = require('express');
-const { json } = require('body-parser');
 const pdf2base64 = require('pdf-to-base64');
 const imageToBase64 = require('image-to-base64');
+const fileUpload = require('express-fileupload');
 const fs = require('fs');
 const subject = express.Router();
 
+subject.use(fileUpload())
 
 const db = mysql.createConnection({
     user: 'root',
@@ -944,6 +945,96 @@ subject.post('/checkStatusWork',(req,res) => {
                 }
             }
         })
+})
+
+subject.post('/fileThread/:roomId/:subjectId/:userId/:reply',(req,res) => {
+    const file = req.files.file;
+    const roomId = req.params.roomId;
+    const subjectId = req.params.subjectId;
+    const userId = req.params.userId;
+    const reply = req.params.reply;
+    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/ThreadFile/${roomId}/${subjectId}/${userId}/${reply}`;
+
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true })
+    }
+
+    db.query('INSERT INTO `file_thread`(`File_Path`, `File_type`) VALUES (?,?)', [`${dir}/${file.name}`, file.mimetype], (err3) => {
+        if (err3) {
+            console.log(err3);
+        }
+        else {
+            // res.status(200).send('Data inserted.')
+            file.mv(`${dir}/${file.name}`, err3 => {
+                if (err3) {
+                    return res.status(500).send(err3)
+                }
+                else {
+                    res.json({ fileName: file.name, filePath: dir })
+                }
+            })
+        }
+    })
+})
+
+subject.post('/fileThread/:roomId/:subjectId/:userId', (req, res) => {
+    const file = req.files.file;
+    const roomId = req.params.roomId;
+    const subjectId = req.params.subjectId;
+    const userId = req.params.userId;
+    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/ThreadFile/${roomId}/${subjectId}/${userId}`;
+
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true })
+    }
+
+    db.query('INSERT INTO `file_thread`(`File_Path`, `File_type`) VALUES (?,?)', [`${dir}/${file.name}`, file.mimetype], (err3) => {
+        if (err3) {
+            console.log(err3);
+        }
+        else {
+            // res.status(200).send('Data inserted.')
+            file.mv(`${dir}/${file.name}`, err3 => {
+                if (err3) {
+                    return res.status(500).send(err3)
+                }
+                else {
+                    res.json({ fileName: file.name, filePath: dir })
+                }
+            })
+        }
+    })
+})
+
+subject.delete('/fileThread',(req,res) => {
+    const name = req.body.name;
+    console.log(name)
+    res.send('delete')
+})
+
+subject.post('/fileThreadId',(req,res) => {
+    const roomId = req.body.roomId;
+    const subjectId = req.body.subjectId;
+    const userId = req.body.userId;
+    const reply = req.body.reply;
+    const name = req.body.name;
+    const dir = reply.length === 0 ? `/Users/yen/Desktop/FinalProject/component/final/src/components/ThreadFile/${roomId}/${subjectId}/${userId}` : `/Users/yen/Desktop/FinalProject/component/final/src/components/ThreadFile/${roomId}/${subjectId}/${userId}/${reply}`;
+    var id = [];
+
+
+    db.query('SELECT * FROM `file_thread` WHERE `File_Path` = ?' ,[`${dir}/${name}`], (err,result) => {
+        if(err){
+            console.log(err)
+        }
+        else{
+            if(result.length !== 0){
+                result.map(v => {
+                    id.push(v)
+                })
+            }
+            res.send(id)
+        }
+    })
 })
 
 module.exports = subject;
