@@ -21,6 +21,7 @@
     "express-session": "^1.17.2",
     "image-to-base64": "^2.2.0",
     "jsonwebtoken": "^8.5.1",
+    "move-file": "^3.0.0",
     "mysql": "^2.18.1",
     "node-video-lib": "^2.2.1",
     "nodemon": "^2.0.12",

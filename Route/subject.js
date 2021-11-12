@@ -1037,4 +1037,106 @@ subject.post('/fileThreadId',(req,res) => {
     })
 })
 
+//still bug
+subject.post('/postThreadImg',(req,res) => {
+    const files = req.body.file;
+    const ans = req.body.ans;
+    var fileName = [];
+    var fileId = []
+    var roomId;
+    var subjectId;
+    var userId;
+    var reply;
+    files.map(v => {
+        roomId = v.File_Path.split('/Users/yen/Desktop/FinalProject/component/final/src/components/ThreadFile/')[1].split('/')[0];
+        subjectId = v.File_Path.split('/Users/yen/Desktop/FinalProject/component/final/src/components/ThreadFile/')[1].split('/')[1];
+        userId = v.File_Path.split('/Users/yen/Desktop/FinalProject/component/final/src/components/ThreadFile/')[1].split('/')[2];
+        reply = v.File_Path.split('/Users/yen/Desktop/FinalProject/component/final/src/components/ThreadFile/')[1].split('/')[3];
+        fileName.push(v.File_Path.split('/Users/yen/Desktop/FinalProject/component/final/src/components/ThreadFile/')[1].split('/')[4])
+        fileId.push(v.File_Thread_id);
+    })
+
+    db.query('INSERT INTO `Thread` (`Student_id`, `Teacher_id`, `Subject_id`, `Room_id`, `Reply_to`, `Example_file`, `Title`, `Detail`, `Time`) VALUES (?,?,?,?,?,?,?,?,?)',
+    [userId[0] === 's' ? userId : '', userId[0] === 't' ? userId : '', subjectId, roomId, reply, JSON.stringify(fileId), '', ans, new Date()],(err) => {
+        if(err){
+            console.log(err)
+        }
+        else{
+            db.query(' SELECT * FROM `Thread` WHERE `Example_file` = ?', [JSON.stringify(fileId)], async(err2,result) => {
+                if(err2){
+                    console.log(err2)
+                }
+                else{
+                    await Promise.all(
+                        fileName.map(async(v, i) => {
+                            const oldDir = files[i].File_Path;
+                            const newDir = `/Users/yen/Desktop/FinalProject/component/final/src/components/ThreadFile/${roomId}/${subjectId}/${userId}/${reply}/${result[0].Thread_id}`;
+
+                            if (!fs.existsSync(newDir)) {
+                                fs.mkdirSync(newDir, { recursive: true })
+                            }
+
+                            fs.rename(oldDir, `${newDir}/${v}`, function (errM) {
+                                if(errM){
+                                    console.log(errM)
+                                }
+                                else{
+                                    return new Promise((resolve, reject) => {
+                                        db.query('UPDATE `file_thread` SET `File_Path`= ? WHERE `File_Thread_id` = ?', [`${newDir}/${v}`, files[i].File_Thread_id],(err3,result3) => {
+                                            if(err3){
+                                                return reject(err3)
+                                            }
+                                            else{
+                                                res.send('send')
+                                                return resolve(result3)
+                                            }
+                                        })
+                                    })
+                                }
+                            })
+                        })
+                    )
+                }
+            })
+        }
+    })
+})
+
+subject.post('/img',async(req,res) => {
+    const id = req.body.id;
+    var path = [];
+
+    const queryPath = await Promise.all(
+        id.map(async(v) => {
+            return new Promise((resolve, reject) => {
+                db.query('SELECT * FROM `file_thread` WHERE `File_Thread_id` = ?', [v], (err, result) => {
+                    if (err) {
+                        return reject(err)
+                    }
+                    else {
+                        return resolve(result)
+                    }
+                })
+            })
+        })
+    )
+
+    queryPath.map((v) => {
+        path.push(v[0].File_Path)
+        // imageToBase64(v[0].File_Path) // Path to the image
+        //     .then(
+        //         (response) => {
+        //             base64.push(response); // "cGF0aC90by9maWxlLmpwZw=="
+        //         }
+        //     )
+        //     .catch(
+        //         (error) => {
+        //             console.log(error); // Logs an error if there was one
+        //         }
+        //     )
+    })
+
+    res.send(path)
+})
+
 module.exports = subject;
