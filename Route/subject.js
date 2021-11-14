@@ -1008,8 +1008,23 @@ subject.post('/fileThread/:roomId/:subjectId/:userId', (req, res) => {
 
 subject.delete('/fileThread',(req,res) => {
     const name = req.body.name;
-    console.log(name)
-    res.send('delete')
+    const subjectId = req.body.subjectId;
+    const roomId = req.body.roomId;
+    const userId = req.body.userId;
+    const threadId = req.body.threadId;
+    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/ThreadFile/${roomId}/${subjectId}/${userId}/${threadId}`;
+    // console.log(`${dir}/${name}`)
+    // res.send('delete')
+
+    db.query('DELETE FROM `file_thread` WHERE `File_Path` = ? ', [`${dir}/${name}`], (err4) => {
+        if (err4) {
+            console.log(err4)
+        }
+        else {
+            fs.unlinkSync(`${dir}/${name}`);
+            res.send('file is deleted')
+        }
+    })
 })
 
 subject.post('/fileThreadId',(req,res) => {
@@ -1037,7 +1052,6 @@ subject.post('/fileThreadId',(req,res) => {
     })
 })
 
-//still bug
 subject.post('/postThreadImg',(req,res) => {
     const files = req.body.file;
     const ans = req.body.ans;
@@ -1087,7 +1101,6 @@ subject.post('/postThreadImg',(req,res) => {
                                                 return reject(err3)
                                             }
                                             else{
-                                                res.send('send')
                                                 return resolve(result3)
                                             }
                                         })
@@ -1096,6 +1109,8 @@ subject.post('/postThreadImg',(req,res) => {
                             })
                         })
                     )
+
+                    res.send('send')
                 }
             })
         }
@@ -1123,20 +1138,31 @@ subject.post('/img',async(req,res) => {
 
     queryPath.map((v) => {
         path.push(v[0].File_Path)
-        // imageToBase64(v[0].File_Path) // Path to the image
-        //     .then(
-        //         (response) => {
-        //             base64.push(response); // "cGF0aC90by9maWxlLmpwZw=="
-        //         }
-        //     )
-        //     .catch(
-        //         (error) => {
-        //             console.log(error); // Logs an error if there was one
-        //         }
-        //     )
     })
 
     res.send(path)
+})
+
+subject.delete('/cancelReplyImg',(req,res) => {
+    const fileList = req.body.fileList;
+
+    Promise.all(
+        fileList.map(async(v) => {
+            return new Promise((resolve, reject) => {
+                db.query('DELETE FROM `file_thread` WHERE `File_Thread_id` = ? AND `File_Path` = ? AND `File_type` = ? ',[v.File_Thread_id,v.File_Path,v.File_type],(err) => {
+                    if(err){
+                        return reject(err)
+                    }
+                    else{
+                        fs.unlinkSync(v.File_Path);
+                        return resolve('file is deleted')
+                    }
+                })
+            })
+        })
+    )
+
+    res.send('canceled')
 })
 
 module.exports = subject;
