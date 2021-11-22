@@ -131,11 +131,12 @@ subject.post('/PostThread',(req,res) => {
     const roomId = req.body.Room_id;
     const title = req.body.Title;
     const detail = req.body.Detail;
+    const fileList = req.body.fileList;
     const today = new Date();
 
     if(studentId){
         db.query('INSERT INTO `Thread`( `Student_id`, `Teacher_id`, `Subject_id`, `Room_id`, `Reply_to`, `Example_file`, `Title`, `Detail`,`Time`) VALUES (?,?,?,?,?,?,?,?,?)',
-            [studentId, "", subjectId, roomId, "", "", title, detail, today],
+            [studentId, "", subjectId, roomId, "", fileList === '[]' ? "" : fileList, title, detail, today],
             (err, result) => {
                 if (err) {
                     console.log(err)
@@ -155,7 +156,7 @@ subject.post('/PostThread',(req,res) => {
     }
     else{
         db.query('INSERT INTO `Thread`( `Student_id`, `Teacher_id`, `Subject_id`, `Room_id`, `Reply_to`, `Example_file`, `Title`, `Detail`,`Time`) VALUES (?,?,?,?,?,?,?,?,?)',
-            ["", teacherId, subjectId, roomId, "", "", title, detail, today],
+            ["", teacherId, subjectId, roomId, "", fileList === '[]' ? "" : fileList, title, detail, today],
             (err, result) => {
                 if (err) {
                     console.log(err)
@@ -1121,24 +1122,26 @@ subject.post('/img',async(req,res) => {
     const id = req.body.id;
     var path = [];
 
-    const queryPath = await Promise.all(
-        id.map(async(v) => {
-            return new Promise((resolve, reject) => {
-                db.query('SELECT * FROM `file_thread` WHERE `File_Thread_id` = ?', [v], (err, result) => {
-                    if (err) {
-                        return reject(err)
-                    }
-                    else {
-                        return resolve(result)
-                    }
+    if(id){
+        const queryPath = await Promise.all(
+            id.map(async (v) => {
+                return new Promise((resolve, reject) => {
+                    db.query('SELECT * FROM `file_thread` WHERE `File_Thread_id` = ?', [v], (err, result) => {
+                        if (err) {
+                            return reject(err)
+                        }
+                        else {
+                            return resolve(result)
+                        }
+                    })
                 })
             })
-        })
-    )
+        )
 
-    queryPath.map((v) => {
-        path.push(v[0].File_Path)
-    })
+        queryPath.map((v) => {
+            path.push(v[0].File_Path)
+        })
+    }
 
     res.send(path)
 })

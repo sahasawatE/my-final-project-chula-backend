@@ -353,6 +353,47 @@ student.post('/editWork', (req,res) => {
         })
 })
 
+student.post('/allSubject',(req,res) => {
+    const roomId = req.body.Room_id;
+    var subjects = [];
+    var room = [];
+
+    db.query('SELECT * FROM `Subject` WHERE `Room_id` = ?',[roomId],async(err,result) => {
+        if(err){
+            console.log(err)
+        }
+        else{
+            // res.send(result)
+            const data = await Promise.all(
+                result.map(async (value) => {
+                    return new Promise((resolve, reject) =>
+                        db.query('SELECT * FROM `Room` WHERE `Room_id` = ?', [value.Room_id], (err2, result2) => {
+                            if (err)
+                                return reject(err2)
+                            else {
+                                return resolve(result2)
+                            }
+                        })
+                    )
+                })
+            )
+
+            data.map(v => {
+                room.push(v)
+            })
+
+            result.map(v => {
+                subjects.push(v)
+            })
+
+            res.send({
+                subjects: subjects,
+                room: room
+            })
+        }
+    })
+})
+
 function uniq(a) {
     var seen = {};
     return a.filter(function (item) {
