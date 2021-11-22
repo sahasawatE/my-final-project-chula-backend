@@ -782,4 +782,44 @@ teacher.post('/checkWork',(req,res) => {
     })
 })
 
+teacher.post('/allSubject',(req,res) => {
+    const teacherId = req.body.Teacher_id;
+    var subjects = [];
+    var room = [];
+
+    db.query('SELECT * FROM `Subject` WHERE `Teacher_id` = ?',[teacherId], async(err, result) => {
+        if(err){
+            console.log(err)
+        }
+        else{
+            const data = await Promise.all(
+                result.map(async (value) => {
+                    return new Promise((resolve, reject) =>
+                        db.query('SELECT * FROM `Room` WHERE `Room_id` = ?', [value.Room_id], (err2, result2) => {
+                            if (err)
+                                return reject(err2)
+                            else {
+                                return resolve(result2)
+                            }
+                        })
+                    )
+                })
+            )
+
+            data.map(v => {
+                room.push(v)
+            })
+
+            result.map(v => {
+                subjects.push(v)
+            })
+
+            res.send({
+                subjects: subjects,
+                room: room
+            })
+        }
+    })
+})
+
 module.exports = teacher
