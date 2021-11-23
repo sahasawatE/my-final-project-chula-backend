@@ -497,45 +497,39 @@ teacher.delete('/deleteClipFolder', (req, res) => {
 teacher.delete('/deleteClip',(req,res) => {
     const clipName = req.body.name;
     const clipPath = req.body.path;
+    const clipId = req.body.id || null;
     var p = [];
     var dir = '';
     var files = [];
 
-    db.query('SELECT * FROM `file_clip` WHERE `File_Path` = ? AND `Clip_Name` = ?',[clipPath,clipName],(err,id) => {
-        if(err){
-            console.log(err)
+    clipPath.split('/').map(v => p.push(v))
+    p.filter(e => e != p[p.length - 1]).map((v, i) => {
+        if (i > 0) {
+            dir = dir + '/' + v
         }
-        else{
-            clipPath.split('/').map(v => p.push(v))
-            p.filter(e => e != p[p.length - 1]).map((v,i) => {
-                if(i > 0){
-                    dir = dir + '/' + v
+    })
+    db.query('SELECT * FROM `Subject_clip` WHERE `Folder_path` = ?', [dir], (err2, f) => {
+        if (err2) {
+            console.log(err2)
+        }
+        else {
+            f[0].files.split('[')[1].split(']')[0].split(',').map(v => {
+                if (v !== String(clipId)) {
+                    files.push(parseInt(v))
                 }
             })
-            db.query('SELECT * FROM `Subject_clip` WHERE `Folder_path` = ?',[dir],(err2,f) => {
-                if(err2){
-                    console.log(err2)
+            db.query('DELETE FROM `file_clip` WHERE `File_Clip_id` = ? AND `Clip_Name` = ? AND `File_Path` = ?', [clipId,clipName,clipPath], (err3) => {
+                if (err3) {
+                    console.log(err3)
                 }
-                else{
-                    f[0].files.split('[')[1].split(']')[0].split(',').map(v => {
-                        if (v !== String(id[0].File_Clip_id)){
-                            files.push(parseInt(v))
+                else {
+                    db.query('UPDATE `Subject_clip` SET `files`= ? WHERE `Folder_path` = ?', [files.length === 0 ? '' : JSON.stringify(files), dir], (err4) => {
+                        if (err4) {
+                            console.log(err4)
                         }
-                    })
-                    db.query('DELETE FROM `file_clip` WHERE `File_Clip_id` = ?', [id[0].File_Clip_id],(err3) => {
-                        if(err3){
-                            console.log(err3)
-                        }
-                        else{
-                            db.query('UPDATE `Subject_clip` SET `files`= ? WHERE `Folder_path` = ?',[files.length === 0 ? '' : JSON.stringify(files),dir],(err4) => {
-                                if(err4){
-                                    console.log(err4)
-                                }
-                                else{
-                                    fs.unlinkSync(clipPath);
-                                    res.send('deleted')
-                                }
-                            })
+                        else {
+                            fs.unlinkSync(clipPath);
+                            res.send('deleted')
                         }
                     })
                 }
