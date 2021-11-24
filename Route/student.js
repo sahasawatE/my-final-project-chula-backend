@@ -209,6 +209,7 @@ student.post('/updateWorkSubmit',(req,res) => {
     const workName = req.body.workName;
     const teacherId = req.body.Teacher_id;
     const score = req.body.score;
+    const today = new Date();
     var workFileId = [];
 
     const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/studentSubmitWork/${subjectId}/${roomId}/${studentId}/${workName}`;
@@ -228,8 +229,8 @@ student.post('/updateWorkSubmit',(req,res) => {
                     })
 
                     if (result.length === 0) {
-                        db.query('INSERT INTO `Student_Work_Submit`(`Student_id`, `Teacher_id`, `Room_id`, `Subject_id`, `Work_Name`, `Folder_path`, `Score`, `files`, `isSubmit`) VALUES (?,?,?,?,?,?,?,?,?)',
-                            [studentId, teacherId, roomId, subjectId, workName, dir, score, JSON.stringify(workFileId), 'false'],(err3) => {
+                        db.query('INSERT INTO `Student_Work_Submit`(`Student_id`, `Teacher_id`, `Room_id`, `Subject_id`, `Work_Name`, `Folder_path`, `Score`,`Student_score` , `files`, `Submit_date`, `isSubmit`) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+                            [studentId, teacherId, roomId, subjectId, workName, dir, score,0, JSON.stringify(workFileId),today, 'false'],(err3) => {
                                 if(err3){
                                     console.log(err3)
                                 }
@@ -239,8 +240,8 @@ student.post('/updateWorkSubmit',(req,res) => {
                             })
                     }
                     else{
-                        db.query('UPDATE `Student_Work_Submit` SET `files`= ? WHERE `Student_id` = ? AND `Teacher_id` = ? AND `Room_id` = ? AND `Subject_id` = ? AND `Work_Name` = ? AND `Folder_path` = ?',
-                            [workFileId.length === 0 ? '' : JSON.stringify(workFileId), studentId, teacherId, roomId, subjectId, workName, dir], (err3) => {
+                        db.query('UPDATE `Student_Work_Submit` SET `files`= ?, `Submit_date` = ? WHERE `Student_id` = ? AND `Teacher_id` = ? AND `Room_id` = ? AND `Subject_id` = ? AND `Work_Name` = ? AND `Folder_path` = ?',
+                            [workFileId.length === 0 ? '' : JSON.stringify(workFileId), today, studentId, teacherId, roomId, subjectId, workName, dir], (err3) => {
                                 if (err3) {
                                     console.log(err3)
                                 }
@@ -322,9 +323,10 @@ student.post('/submitwork',(req,res) => {
     const workName = req.body.workName;
     const teacherId = req.body.Teacher_id;
     const score = req.body.score;
+    const today = new Date();
 
-    db.query('UPDATE `Student_Work_Submit` SET `isSubmit`= ? WHERE `Student_id` = ? AND `Teacher_id` = ? AND `Room_id` = ? AND `Subject_id` = ? AND `Work_Name` = ? AND `Score` = ?',
-    ['true',studentId,teacherId,roomId,subjectId,workName,score],(err) => {
+    db.query('UPDATE `Student_Work_Submit` SET `isSubmit`= ?, `Submit_date` = ? WHERE `Student_id` = ? AND `Teacher_id` = ? AND `Room_id` = ? AND `Subject_id` = ? AND `Work_Name` = ? AND `Score` = ?',
+    ['true', today,studentId,teacherId,roomId,subjectId,workName,score],(err) => {
         if(err){
             console.log(err)
         }
