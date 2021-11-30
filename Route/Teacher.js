@@ -816,4 +816,43 @@ teacher.post('/allSubject',(req,res) => {
     })
 })
 
+teacher.post('/allStudents',(req,res) => {
+    const roomId = req.body.Room_id;
+
+    db.query('SELECT * FROM `Student` WHERE `Room_id` = ?',[roomId],(err,result) => {
+        if(err){
+            console.log(err)
+        }
+        else{
+            res.send(result)
+        }
+    })
+})
+
+teacher.post('/askRoom',(req,res) => {
+    const roomId = req.body.roomId;
+
+    db.query('SELECT * FROM `Room` WHERE `Room_id` = ?',[roomId],(err,result) => {
+        if(err){
+            console.log(err)
+        }
+        else{
+            res.send(result)
+        }
+    })
+})
+
+teacher.post('/studentParent',(req,res) => {
+    const studentId = req.body.Student_id;
+
+    db.query('SELECT * FROM `Parent` WHERE `Children` LIKE ?',[`%${studentId}%`],(err,result) => {
+        if(err){
+            console.log(err)
+        }
+        else{
+            res.send(result)
+        }
+    })
+})
+
 module.exports = teacher
