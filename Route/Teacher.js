@@ -598,7 +598,7 @@ teacher.post('/allWork',(req,res) => {
     const subjectId = req.body.Subject_id;
     const roomId = req.body.Room_id;
 
-    db.query('SELECT * FROM `Subject_Work` WHERE `Teacher_id` = ? AND `Subject_id` = ? AND `Room_id` = ? AND `Work_Status` = ?',[teacherId,subjectId,roomId,'open'],(err,work) => {
+    db.query('SELECT * FROM `Subject_Work` WHERE `Teacher_id` = ? AND `Subject_id` = ? AND `Room_id` = ?',[teacherId,subjectId,roomId],(err,work) => {
         if(err){
             console.log.log(err)
         }
@@ -853,6 +853,32 @@ teacher.post('/studentParent',(req,res) => {
             res.send(result)
         }
     })
+})
+
+teacher.post('/hideWork',(req,res) => {
+    const work = req.body.work
+    db.query('UPDATE `Subject_Work` SET `Work_Status`= ? WHERE `Subject_id` = ? AND `Teacher_id` = ? AND `Room_id` = ? AND `Work_Name` = ? AND `Work_Detail` = ? AND `Work_Status` = ? AND `Start` = ? AND `End` = ? AND `Score` = ? AND `File_Path` = ?',
+    ['close',work.Subject_id,work.Teacher_id,work.Room_id,work.Work_Name,work.Work_Detail,work.Work_Status,work.Start,work.End,work.Score,work.File_Path],(err) => {
+        if(err){
+            console.log(err)
+        }
+        else{
+            res.send('updated')
+        }
+    })
+})
+
+teacher.post('/showWork', (req, res) => {
+    const work = req.body.work
+    db.query('UPDATE `Subject_Work` SET `Work_Status`= ? WHERE `Subject_id` = ? AND `Teacher_id` = ? AND `Room_id` = ? AND `Work_Name` = ? AND `Work_Detail` = ? AND `Work_Status` = ? AND `Start` = ? AND `End` = ? AND `Score` = ? AND `File_Path` = ?',
+        ['open', work.Subject_id, work.Teacher_id, work.Room_id, work.Work_Name, work.Work_Detail, work.Work_Status, work.Start, work.End, work.Score, work.File_Path], (err) => {
+            if (err) {
+                console.log(err)
+            }
+            else {
+                res.send('updated')
+            }
+        })
 })
 
 module.exports = teacher
