@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql');
 const app = express();
+var http = require('http').createServer(app);
 const student = require('./Route/student');
 const subject = require('./Route/subject');
 const teacher = require('./Route/Teacher');
@@ -102,6 +103,34 @@ function generateAccessToken(id,role) {
     return jwt.sign({ _id: id,role:role}, "hithisishok", { expiresIn: "10h" });
 }
 
-app.listen('3001', () => {
+var io = require('socket.io')(http, {
+    cors: {
+        origin: '*',
+    }
+});
+
+io.use((socket, next) => {
+    if (socket.handshake.query && socket.handshake.query.token) {
+        jwt.verify(socket.handshake.query.token, "hithisishok", function (err, decoded) {
+            if (err) return next(new Error('Authentication error'));
+            socket.decoded = decoded;
+            next();
+        });
+    }
+    else {
+        next(new Error('Authentication error'));
+    }
+}).on('connection',(socket) => {
+    console.log(socket.decoded);
+    socket.on('disconnect', () => {
+        console.log('user disconnected');
+    });
+    socket.on('sent-message', (msg) => {
+        io.sockets.emit('new-message', msg);
+        console.log('new-message' + JSON.stringify(msg))
+    });
+})
+
+http.listen('3001', () => {
     console.log('server is running on port 3001')
 });
