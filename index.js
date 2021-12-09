@@ -10,6 +10,7 @@ const verify = require('./Route/verifytoken');
 const bodyParser = require('body-parser');
 const bcrypt = require("bcryptjs");
 const jwt = require('jsonwebtoken');
+const imageToBase64 = require('image-to-base64');
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -126,8 +127,37 @@ io.use((socket, next) => {
         console.log('user disconnected');
     });
     socket.on('sent-message', (msg) => {
-        io.sockets.emit('new-message', msg);
-        console.log('new-message' + JSON.stringify(msg))
+        io.emit('new-message', msg);
+        // console.log('new-message' + JSON.stringify(msg))
+    });
+    socket.on('sent-message-image',async(msg) => {
+        const convert2base64 = await Promise.all(
+            msg.file.map(v => {
+                return new Promise((resolve,reject) => {
+                    imageToBase64(v.File_Path) // Path to the image
+                        .then(
+                            (response) => {
+                                return resolve(response); // "cGF0aC90by9maWxlLmpwZw=="
+                            }
+                        )
+                        .catch(
+                            (error) => {
+                                return reject(error); // Logs an error if there was one
+                            }
+                        )
+                })
+            })  
+        );
+        io.emit('new-message-image', 
+            { 
+                msg: msg.msg,
+                fileData: convert2base64,
+                thread: msg.thread,
+                subject: msg.subject,
+                user: msg.user,
+                room: msg.room
+            }
+        );
     });
 })
 
