@@ -76,6 +76,13 @@ app.post('/login', (req, res) => {
     })
 })
 
+app.get('/teacherList',(req,res) => {
+    db.query('SELECT * FROM `Teacher`',[],(err,result) => {
+        if(err) console.log(err);
+        else res.send(result)
+    })
+})
+
 app.get('/', verify, (req,res) => {
     const id = req.user._id;
     if (req.user.role === 'student') {
@@ -159,6 +166,9 @@ io.use((socket, next) => {
             }
         );
     });
+    socket.on('push-notification',() => {
+        io.emit('new-notification')
+    })
 })
 
 http.listen('3001', () => {

@@ -543,6 +543,39 @@ subject.post('/uploadDocNoti',(req,res) => {
     })
 })
 
+subject.post('/uploadClipNoti', (req, res) => {
+    const teacherId = req.body.Teacher_id;
+    const roomId = req.body.Room_id;
+    const subjectId = req.body.Subject_id;
+    const today = new Date();
+    const folderName = req.body.FolderName;
+
+    db.query('INSERT INTO `Notification`( `Noti_Detail`, `Teacher_id`, `Room_id`, `Subject_id`, `Noti_Time`, `Student_id`) VALUES (?,?,?,?,?,?)', [folderName === 'noFolder' ? "อัพโหลดคลิป" : `อัพโหลดคลิปใน ${folderName}`, teacherId, roomId, subjectId, today, ""], (err2, result2) => {
+        if (err2) {
+            console.log(err2)
+        }
+        else {
+            res.send('upload doc done')
+        }
+    })
+})
+
+subject.post('/uploadWorkNoti', (req, res) => {
+    const teacherId = req.body.Teacher_id;
+    const roomId = req.body.Room_id;
+    const subjectId = req.body.Subject_id;
+    const today = new Date();
+
+    db.query('INSERT INTO `Notification`( `Noti_Detail`, `Teacher_id`, `Room_id`, `Subject_id`, `Noti_Time`, `Student_id`) VALUES (?,?,?,?,?,?)', ['เพิ่มงานใหม่', teacherId, roomId, subjectId, today, ""], (err2, result2) => {
+        if (err2) {
+            console.log(err2)
+        }
+        else {
+            res.send('upload doc done')
+        }
+    })
+})
+
 subject.post('/inFolder',(req,res) => {
     const teacherId = req.body.Teacher_id;
     const roomId = req.body.Room_id;
