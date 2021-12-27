@@ -11,13 +11,31 @@ const bodyParser = require('body-parser');
 const bcrypt = require("bcryptjs");
 const jwt = require('jsonwebtoken');
 const imageToBase64 = require('image-to-base64');
+const fs = require('fs');
+const path = require('path');
 
 app.use(cors());
 app.use(bodyParser.json());
+// const db = mysql.createConnection({
+//     user: "root",
+//     host: "localhost",
+//     database: "Learning_Center"
+// });
+
 const db = mysql.createConnection({
-    user: "root",
-    host: "localhost",
-    database: "Learning_Center"
+    user: "tkschool",
+    password: 'bYNce1UiCeoi0eSw',
+    host: "db-cluster-do-user-8234643-0.b.db.ondigitalocean.com",
+    database: "Learning_Center",
+    port: 25060,
+    insecureAuth: true,
+    force: true,
+    ssl:{
+        cert: fs.readFileSync('/Users/yen/Desktop/FinalProject/server/ca-certificate.crt')
+    }
+    // ssl:{
+    //     cert: fs.readFileSync(path.resolve(__dirname,'ca-certificate.crt')).toString()
+    // }
 });
 
 app.use('/student',student);
@@ -72,6 +90,45 @@ app.post('/login', (req, res) => {
                 }    
             }
             
+        }
+    })
+})
+
+app.post('/askSubject',(req,res) => {
+    const subjectId = req.body.Subject_id;
+
+    db.query('SELECT * FROM `Subject` WHERE `Subject_id` = ?',[subjectId],(err,result) => {
+        if(err){
+            console.log(err)
+        }
+        else{
+            res.send(result)
+        }
+    })
+})
+
+app.post('/askTeacher',(req,res) => {
+    const teacherId = req.body.Teacher_id;
+
+    db.query('SELECT * FROM `Teacher` WHERE `Teacher_id` = ?',[teacherId],(err,result) => {
+        if(err){
+            console.log(err)
+        }
+        else{
+            res.send(result)
+        }
+    })
+})
+
+app.post('/askStudent',(req,res) => {
+    const studentId = req.body.Student_id;
+
+    db.query('SELECT * FROM `Student` WHERE `Student_id` = ?', [studentId], (err, result) => {
+        if (err) {
+            console.log(err)
+        }
+        else {
+            res.send(result)
         }
     })
 })
@@ -171,6 +228,6 @@ io.use((socket, next) => {
     })
 })
 
-http.listen('3001', () => {
-    console.log('server is running on port 3001')
+http.listen('25060', () => {
+    console.log('server is running on port 25060')
 });

@@ -1151,6 +1151,24 @@ subject.post('/postThreadImg',(req,res) => {
     })
 })
 
+subject.post('/pushNotification',(req,res) => {
+    const notiDetail = req.body.detail;
+    const studentId = req.body.Student_id;
+    const teacherId = req.body.Teacher_id;
+    const roomId = req.body.Room_id;
+    const subjectId = req.body.Subject_id;
+    const time = new Date();
+
+    db.query('INSERT INTO `Notification` (`Noti_Detail`,`Teacher_id`,`Room_id`,`Subject_id`,`Noti_Time`,`Student_id`) VALUES (?,?,?,?,?,?)',[notiDetail,teacherId,roomId,subjectId,time,studentId],(err) => {
+        if(err){
+            console.log(err)
+        }
+        else{
+            res.status(200).send();
+        }
+    })
+})
+
 subject.post('/img',async(req,res) => {
     const id = req.body.id;
     var path = [];
