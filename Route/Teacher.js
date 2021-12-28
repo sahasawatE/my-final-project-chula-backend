@@ -7,10 +7,22 @@ const imageToBase64 = require('image-to-base64');
 const fs = require('fs');
 // const { EBADF } = require('constants');
 
+// const db = mysql.createConnection({
+//     user: 'root',
+//     host: 'localhost',
+//     database: "Learning_Center"
+// });
+
 const db = mysql.createConnection({
-    user: 'root',
-    host: 'localhost',
-    database: "Learning_Center"
+    user: "tkschool",
+    password: 'RLnxY4ykj6Gf3oJ6',
+    host: "db-cluster-do-user-8234643-0.b.db.ondigitalocean.com",
+    database: "Learning_Center",
+    port: 25060,
+    ssl: true
+    // ssl:{
+    //     cert: fs.readFileSync(path.resolve(__dirname,'ca-certificate.crt')).toString()
+    // }
 });
 
 teacher.use(fileUpload());

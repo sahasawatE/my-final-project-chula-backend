@@ -24,15 +24,11 @@ app.use(bodyParser.json());
 
 const db = mysql.createConnection({
     user: "tkschool",
-    password: 'bYNce1UiCeoi0eSw',
+    password: 'RLnxY4ykj6Gf3oJ6',
     host: "db-cluster-do-user-8234643-0.b.db.ondigitalocean.com",
     database: "Learning_Center",
     port: 25060,
-    insecureAuth: true,
-    force: true,
-    ssl:{
-        cert: fs.readFileSync('/Users/yen/Desktop/FinalProject/server/ca-certificate.crt')
-    }
+    ssl: true
     // ssl:{
     //     cert: fs.readFileSync(path.resolve(__dirname,'ca-certificate.crt')).toString()
     // }
@@ -90,6 +86,19 @@ app.post('/login', (req, res) => {
                 }    
             }
             
+        }
+    })
+})
+
+app.post('/askRoom',(req,res) => {
+    const roomId = req.body.Room_id;
+
+    db.query('SELECT * FROM `Room` WHERE `Room_id` = ?' ,[roomId],(err,result) => {
+        if(err){
+            console.log(err)
+        }
+        else{
+            res.send(result)
         }
     })
 })
