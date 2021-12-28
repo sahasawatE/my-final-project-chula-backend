@@ -444,7 +444,7 @@ subject.post('/docCreateFolder',(req,res) => {
     const subjectId = req.body.Subject_id;
     const folderName = req.body.FolderName;
 
-    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${subjectId}/${teacherId}/${roomId}`
+    const dir = `/home/tkschool/Files/uploads/${subjectId}/${teacherId}/${roomId}`
 
     if(folderName === 'noFolder'){
         db.query('SELECT `Folder_path` FROM `Subject_doc` WHERE `Folder_path` = ?',[`${dir}/${folderName}`],(err,fn) => {
@@ -494,7 +494,7 @@ subject.post('/clipCreateFolder', (req, res) => {
     const subjectId = req.body.Subject_id;
     const folderName = req.body.FolderName;
 
-    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/TeacherUploadClip/${subjectId}/${teacherId}/${roomId}`
+    const dir = `/home/tkschool/Files/TeacherUploadClip/${subjectId}/${teacherId}/${roomId}`
 
     if (folderName === 'noFolder') {
         db.query('SELECT `Folder_path` FROM `Subject_clip` WHERE `Folder_path` = ?', [`${dir}/${folderName}`], (err, fn) => {
@@ -593,7 +593,7 @@ subject.post('/inFolder',(req,res) => {
     const roomId = req.body.Room_id;
     const subjectId = req.body.Subject_id;
     const folders = req.body.folders;
-    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${subjectId}/${teacherId}/${roomId}`;
+    const dir = `/home/tkschool/Files/uploads/${subjectId}/${teacherId}/${roomId}`;
 
     var fileId = [];
     var Files = [];
@@ -693,7 +693,7 @@ subject.post('/inClipFolder', (req, res) => {
     const roomId = req.body.Room_id;
     const subjectId = req.body.Subject_id;
     const folders = req.body.folders;
-    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/TeacherUploadClip/${subjectId}/${teacherId}/${roomId}`;
+    const dir = `/home/tkschool/Files/TeacherUploadClip/${subjectId}/${teacherId}/${roomId}`;
 
     var fileId = [];
     var Files = [];
@@ -999,7 +999,7 @@ subject.post('/fileThread/:roomId/:subjectId/:userId/:reply',(req,res) => {
     const subjectId = req.params.subjectId;
     const userId = req.params.userId;
     const reply = req.params.reply;
-    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/ThreadFile/${roomId}/${subjectId}/${userId}/${reply}`;
+    const dir = `/home/tkschool/Files/ThreadFile/${roomId}/${subjectId}/${userId}/${reply}`;
 
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true })
@@ -1028,7 +1028,7 @@ subject.post('/fileThread/:roomId/:subjectId/:userId', (req, res) => {
     const roomId = req.params.roomId;
     const subjectId = req.params.subjectId;
     const userId = req.params.userId;
-    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/ThreadFile/${roomId}/${subjectId}/${userId}`;
+    const dir = `/home/tkschool/Files/ThreadFile/${roomId}/${subjectId}/${userId}`;
 
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true })
@@ -1058,7 +1058,7 @@ subject.delete('/fileThread',(req,res) => {
     const roomId = req.body.roomId;
     const userId = req.body.userId;
     const threadId = req.body.threadId;
-    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/ThreadFile/${roomId}/${subjectId}/${userId}/${threadId}`;
+    const dir = `/home/tkschool/Files/ThreadFile/${roomId}/${subjectId}/${userId}/${threadId}`;
     // console.log(`${dir}/${name}`)
     // res.send('delete')
 
@@ -1079,7 +1079,7 @@ subject.post('/fileThreadId',(req,res) => {
     const userId = req.body.userId;
     const reply = req.body.reply;
     const name = req.body.name;
-    const dir = reply.length === 0 ? `/Users/yen/Desktop/FinalProject/component/final/src/components/ThreadFile/${roomId}/${subjectId}/${userId}` : `/Users/yen/Desktop/FinalProject/component/final/src/components/ThreadFile/${roomId}/${subjectId}/${userId}/${reply}`;
+    const dir = reply.length === 0 ? `/home/tkschool/Files/ThreadFile/${roomId}/${subjectId}/${userId}` : `/home/tkschool/Files/ThreadFile/${roomId}/${subjectId}/${userId}/${reply}`;
     var id = [];
 
 
@@ -1108,11 +1108,11 @@ subject.post('/postThreadImg',(req,res) => {
     var userId;
     var reply;
     files.map(v => {
-        roomId = v.File_Path.split('/Users/yen/Desktop/FinalProject/component/final/src/components/ThreadFile/')[1].split('/')[0];
-        subjectId = v.File_Path.split('/Users/yen/Desktop/FinalProject/component/final/src/components/ThreadFile/')[1].split('/')[1];
-        userId = v.File_Path.split('/Users/yen/Desktop/FinalProject/component/final/src/components/ThreadFile/')[1].split('/')[2];
-        reply = v.File_Path.split('/Users/yen/Desktop/FinalProject/component/final/src/components/ThreadFile/')[1].split('/')[3];
-        fileName.push(v.File_Path.split('/Users/yen/Desktop/FinalProject/component/final/src/components/ThreadFile/')[1].split('/')[4])
+        roomId = v.File_Path.split('/home/tkschool/Files/ThreadFile/')[1].split('/')[0];
+        subjectId = v.File_Path.split('/home/tkschool/Files/ThreadFile/')[1].split('/')[1];
+        userId = v.File_Path.split('/home/tkschool/Files/ThreadFile/')[1].split('/')[2];
+        reply = v.File_Path.split('/home/tkschool/Files/ThreadFile/')[1].split('/')[3];
+        fileName.push(v.File_Path.split('/home/tkschool/Files/ThreadFile/')[1].split('/')[4])
         fileId.push(v.File_Thread_id);
     })
 
@@ -1130,7 +1130,7 @@ subject.post('/postThreadImg',(req,res) => {
                     await Promise.all(
                         fileName.map(async(v, i) => {
                             const oldDir = files[i].File_Path;
-                            const newDir = `/Users/yen/Desktop/FinalProject/component/final/src/components/ThreadFile/${roomId}/${subjectId}/${userId}/${reply}/${result[0].Thread_id}`;
+                            const newDir = `/home/tkschool/Files/ThreadFile/${roomId}/${subjectId}/${userId}/${reply}/${result[0].Thread_id}`;
 
                             if (!fs.existsSync(newDir)) {
                                 fs.mkdirSync(newDir, { recursive: true })

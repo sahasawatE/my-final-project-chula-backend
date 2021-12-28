@@ -70,7 +70,7 @@ teacher.post('/uploadFile/:subjectId/:teacherId/:roomId/:folder', (req, res) => 
     const roomId = req.params.roomId;
     const folderName = req.params.folder;
 
-    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${subjectId}/${teacherId}/${roomId}`
+    const dir = `/home/tkschool/Files/uploads/${subjectId}/${teacherId}/${roomId}`
 
     const file = req.files.file;
     
@@ -101,7 +101,7 @@ teacher.post('/uploadFileInFolder',(req,res) => {
     const teacherId = req.body.Teacher_id;
     const folder = req.body.folder;
 
-    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${subjectId}/${teacherId}/${roomId}/${folder}`
+    const dir = `/home/tkschool/Files/uploads/${subjectId}/${teacherId}/${roomId}/${folder}`
 
     var files = [];
 
@@ -134,7 +134,7 @@ teacher.post('/uploadClip/:subjectId/:teacherId/:roomId/:folder/:ClipName', (req
     const folderName = req.params.folder;
     const clipName = req.params.ClipName;
 
-    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/TeacherUploadClip/${subjectId}/${teacherId}/${roomId}`
+    const dir = `/home/tkschool/Files/TeacherUploadClip/${subjectId}/${teacherId}/${roomId}`
 
     const file = req.files.clip;
 
@@ -165,7 +165,7 @@ teacher.post('/uploadClipInFolder', (req, res) => {
     const teacherId = req.body.Teacher_id;
     const folder = req.body.folder;
 
-    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/TeacherUploadClip/${subjectId}/${teacherId}/${roomId}/${folder}`
+    const dir = `/home/tkschool/Files/TeacherUploadClip/${subjectId}/${teacherId}/${roomId}/${folder}`
 
     var files = [];
 
@@ -228,7 +228,7 @@ teacher.post('/uploadWorkFiles/:subjectId/:teacherId/:roomId/:workName', async (
     const file = req.files.file;
     const type = file.mimetype;
 
-    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/uploadWorks/${subjectId}/${teacherId}/${roomId}/${workName}`
+    const dir = `/home/tkschool/Files/uploadWorks/${subjectId}/${teacherId}/${roomId}/${workName}`
 
     if(!fs.existsSync(dir)){
         fs.mkdirSync(dir, { recursive: true })
@@ -311,7 +311,7 @@ teacher.get('/video/:path/:name/:subjectId/:teacherId/:roomId',(req,res) => {
     const teacherId = req.params.teacherId;
     const roomId = req.params.roomId;
 
-    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/TeacherUploadClip/${subjectId}/${teacherId}/${roomId}/${path}/${name}`;
+    const dir = `/home/tkschool/Files/TeacherUploadClip/${subjectId}/${teacherId}/${roomId}/${path}/${name}`;
     if (!range) {
         res.status(400).send("Requires Range header");
     }
@@ -363,7 +363,7 @@ teacher.delete('/deleteFile',(req,res) => {
 
     file.File_Path.split('/').map(v => {folderName.push(v)})
 
-    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/uploads/${subjectId}/${teacherId}/${roomId}/${folderName[folderName.length - 2]}`;
+    const dir = `/home/tkschool/Files/uploads/${subjectId}/${teacherId}/${roomId}/${folderName[folderName.length - 2]}`;
     //delete notification when delete a file
 
     db.query('SELECT * FROM `Subject_doc` WHERE `Folder_path` = ? AND `files` LIKE ?',[dir,`%${file.File_Doc_id}%`],(err,result) => {
@@ -625,7 +625,7 @@ teacher.delete('/deleteWork',(req,res) => {
     const fileId = [];
 
     if(work.File_Path){
-        const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/uploadWorks/${work.Subject_id}/${work.Teacher_id}/${work.Room_id}/${work.Work_Name}`
+        const dir = `/home/tkschool/Files/uploadWorks/${work.Subject_id}/${work.Teacher_id}/${work.Room_id}/${work.Work_Name}`
 
         work.File_Path.split('[')[1].split(']')[0].split(',').map(v => {
             fileId.push(parseInt(v))
@@ -670,7 +670,7 @@ teacher.delete('/deleteOnePrepare',(req,res) => {
     const roomId = req.body.Room_id;
     const workName = req.body.Work_Name;
 
-    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/uploadWorks/${subjectId}/${teacherId}/${roomId}/${workName}`
+    const dir = `/home/tkschool/Files/uploadWorks/${subjectId}/${teacherId}/${roomId}/${workName}`
 
     db.query('DELETE FROM `file_work` WHERE `File_path` = ?',[`${dir}/${fileName}`], (err, result) => {
         if (err) {
@@ -691,7 +691,7 @@ teacher.delete('/deletePrepare',async(req,res) => {
 
     var fileName = [];
 
-    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/uploadWorks/${subjectId}/${teacherId}/${roomId}/${workName}`
+    const dir = `/home/tkschool/Files/uploadWorks/${subjectId}/${teacherId}/${roomId}/${workName}`
 
     db.query('SELECT `File_path` FROM `file_work` WHERE `File_path` LIKE ?', [`${dir}%`], (err, result) => {
         if (err) {
@@ -730,7 +730,7 @@ teacher.post('/addWorkWithFiles',(req,res) => {
 
     var fileId = [];
 
-    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/uploadWorks/${subjectId}/${teacherId}/${roomId}/${workName}`
+    const dir = `/home/tkschool/Files/uploadWorks/${subjectId}/${teacherId}/${roomId}/${workName}`
 
     db.query('SELECT `Work_File_id` FROM `file_work` WHERE `File_path` LIKE ?',[`${dir}%`],(err,result) => {
         if(err){

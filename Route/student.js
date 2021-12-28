@@ -191,7 +191,7 @@ student.post('/uploadWorkFile/:subjectId/:studentId/:roomId/:workName',(req,res)
     const file = req.files.file;
     const type = file.mimetype;
 
-    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/studentSubmitWork/${subjectId}/${roomId}/${studentId}/${workName}`;
+    const dir = `/home/tkschool/Files/studentSubmitWork/${subjectId}/${roomId}/${studentId}/${workName}`;
 
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true })
@@ -224,7 +224,7 @@ student.post('/updateWorkSubmit',(req,res) => {
     const today = new Date();
     var workFileId = [];
 
-    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/studentSubmitWork/${subjectId}/${roomId}/${studentId}/${workName}`;
+    const dir = `/home/tkschool/Files/studentSubmitWork/${subjectId}/${roomId}/${studentId}/${workName}`;
 
     db.query('SELECT * FROM `Student_Work_Submit` WHERE `Subject_id` = ? AND `Student_id` = ? AND `Room_id` = ? AND `Work_Name` = ?',[subjectId,studentId,roomId,workName], (err,result) => {
         if(err){
@@ -278,7 +278,7 @@ student.post('/prepareWork',(req,res) => {
     var prepareWorkFileId = [];
     var files = [];
 
-    const dir = `/Users/yen/Desktop/FinalProject/component/final/src/components/studentSubmitWork/${subjectId}/${roomId}/${studentId}/${workName}`;
+    const dir = `/home/tkschool/Files/studentSubmitWork/${subjectId}/${roomId}/${studentId}/${workName}`;
 
     db.query('SELECT * FROM `Student_Work_Submit` WHERE `Subject_id` = ? AND `Student_id` = ? AND `Room_id` = ? AND `Work_Name` = ? AND `Folder_path` = ? AND `Teacher_id` = ? AND `Score` = ?', [subjectId, studentId, roomId, workName,dir,teacherId,score],async (err,result) => {
         if(err){
