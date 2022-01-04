@@ -893,4 +893,26 @@ teacher.post('/showWork', (req, res) => {
         })
 })
 
+teacher.post('/submitWorkScore',(req,res) => {
+    const room = req.body.room;
+    const subject = req.body.subject;
+    const student = req.body.student;
+    const teacherId = req.body.teacher;
+    const name = req.body.name;
+    const files = req.body.files;
+    const checked = req.body.checked;
+    const score = req.body.score;
+    const comment = req.body.comment;
+
+    db.query('UPDATE `Student_Work_Submit` SET `is_Checked` = ? , `Student_score` = ? , `comment` = ? WHERE `Room_id` = ? AND `Student_id` = ? AND `Work_Name` = ? AND `Teacher_id` = ? AND `Subject_id` = ? AND `files` = ?',
+    [checked,score,comment,room,student,name,teacherId,subject,files],(err, result) => {
+        if(err){
+            console.log(err)
+        }
+        else{
+            res.send('done')
+        }
+    })
+})
+
 module.exports = teacher

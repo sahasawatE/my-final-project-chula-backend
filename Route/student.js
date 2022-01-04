@@ -241,8 +241,8 @@ student.post('/updateWorkSubmit',(req,res) => {
                     })
 
                     if (result.length === 0) {
-                        db.query('INSERT INTO `Student_Work_Submit`(`Student_id`, `Teacher_id`, `Room_id`, `Subject_id`, `Work_Name`, `Folder_path`, `Score`,`Student_score` , `files`, `Submit_date`, `isSubmit`) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
-                            [studentId, teacherId, roomId, subjectId, workName, dir, score,0, JSON.stringify(workFileId),today, 'false'],(err3) => {
+                        db.query('INSERT INTO `Student_Work_Submit`(`Student_id`, `Teacher_id`, `Room_id`, `Subject_id`, `Work_Name`, `Folder_path`, `Score`,`Student_score` , `files`, `Submit_date`, `isSubmit`,`is_Checked`,`comment`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)',
+                            [studentId, teacherId, roomId, subjectId, workName, dir, score,0, JSON.stringify(workFileId),today, 'false','false',''],(err3) => {
                                 if(err3){
                                     console.log(err3)
                                 }

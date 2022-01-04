@@ -977,18 +977,13 @@ subject.post('/updateCLipList', (req, res) => {
 subject.post('/checkStatusWork',(req,res) => {
     const selectWork = req.body.selectWork;
     const studentId = req.body.Student_id
-    db.query('SELECT `isSubmit` FROM `Student_Work_Submit` WHERE `Student_id` = ? AND `Teacher_id` = ? AND `Room_id` = ? AND `Subject_id` = ? AND `Work_Name` = ? AND `Score` = ?',
+    db.query('SELECT * FROM `Student_Work_Submit` WHERE `Student_id` = ? AND `Teacher_id` = ? AND `Room_id` = ? AND `Subject_id` = ? AND `Work_Name` = ? AND `Score` = ?',
         [studentId, selectWork.Teacher_id, selectWork.Room_id, selectWork.Subject_id, selectWork.Work_Name, selectWork.Score],(err,result) => {
             if(err){
                 console.log(err)
             }
             else{
-                if(result.length === 0){
-                    res.send('false')
-                }
-                else{
-                    res.send(result[0].isSubmit)
-                }
+                res.send(result)
             }
         })
 })
